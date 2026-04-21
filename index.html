@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stress &amp; Decision-Making — RQS Final · v5</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:        #f5f1e8;
+    --ink:       #2a2a2a;
+    --ink-soft:  #5a5550;
+    --rule:      #d4d0c4;
+    --grid:      #e3dfd4;
+    --muted:     #95908a;
+    --primary:   #1a5490;
+    --a1:        #c17b4e;
+    --a2:        #4a7c74;
+    --a3:        #8e5a7a;
+    --a4:        #6b8e58;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 4vh 6vw;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .slide.active { display: flex; }
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1vh;
+    margin-bottom: 2.5vh;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .slide-header .tag { color: var(--muted); }
+  .slide-header .num { font-variant-numeric: tabular-nums; }
+  h1 {
+    font-size: 34px;
+    font-weight: 600;
+    margin: 0 0 1vh 0;
+    line-height: 1.18;
+    max-width: 95%;
+  }
+  h1 em {
+    color: var(--a1);
+    font-style: italic;
+    font-weight: 600;
+  }
+  .subtitle {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin: 0.5vh 0 2.5vh 0;
+    max-width: 92%;
+    line-height: 1.4;
+  }
+  .content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* Charts */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4vw;
+    flex: 1;
+    min-height: 0;
+  }
+  .chart-wrap { display: flex; flex-direction: column; min-height: 0; }
+  .chart-mini-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.5vh;
+    text-align: center;
+  }
+  .chart-canvas { flex: 1; min-height: 0; position: relative; }
+  .single-chart-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* Footnote / source */
+  .footnote {
+    margin-top: 1.8vh;
+    padding-top: 1.2vh;
+    border-top: 1px solid var(--rule);
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .footnote strong { color: var(--ink); font-weight: 600; }
+  .footnote .source {
+    margin-top: 0.7vh;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footnote .source a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--primary);
+  }
+  .footnote .source a:hover { border-bottom-style: solid; }
+
+  /* Generic cards grid */
+  .findings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.8vh 2vw;
+    margin-top: 1vh;
+  }
+  .finding-card {
+    padding: 1.6vh 1.4vw;
+    background: rgba(245, 241, 232, 0.6);
+    border-left: 2px solid var(--a2);
+  }
+  .finding-card.up { border-left-color: var(--a1); }
+  .finding-card.down { border-left-color: var(--a3); }
+  .finding-card.primary { border-left-color: var(--primary); }
+  .finding-card .finding-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.5vh;
+    font-weight: 600;
+  }
+  .finding-card .finding-text {
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .finding-card .finding-text strong { color: var(--primary); }
+
+  /* External link card */
+  .link-card {
+    margin: 2vh 0;
+    padding: 2.5vh 2.5vw;
+    background: rgba(26, 84, 144, 0.04);
+    border-left: 3px solid var(--primary);
+  }
+  .link-card .link-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 1vh;
+  }
+  .link-card .paper-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.4vh;
+    line-height: 1.3;
+  }
+  .link-card .paper-cite {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 1.2vh;
+    font-style: italic;
+  }
+  .link-card .paper-url { font-size: 13px; color: var(--primary); }
+  .link-card .paper-url a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--primary);
+  }
+
+  /* Hook */
+  .slide-hook .hook-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2vh;
+  }
+  .slide-hook .hook-lede {
+    font-size: 38px;
+    font-weight: 500;
+    line-height: 1.2;
+    max-width: 90%;
+    color: var(--ink);
+  }
+  .slide-hook .hook-lede em {
+    color: var(--a1);
+    font-style: italic;
+  }
+  .slide-hook .stats-row {
+    display: flex;
+    gap: 3vw;
+    padding: 2vh 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .stat-block { flex: 1; }
+  .stat-number {
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--primary);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 0.6vh;
+    line-height: 1.35;
+  }
+  .slide-hook .reveal {
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 85%;
+    line-height: 1.5;
+  }
+  .slide-hook .reveal strong { color: var(--ink); }
+
+  /* System 1/2 Kahneman */
+  .dual-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5vw;
+    flex: 1;
+    align-items: stretch;
+  }
+  .dual-col {
+    padding: 2.5vh 2vw;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vh;
+  }
+  .dual-col.sys1 { background: rgba(193, 123, 78, 0.06); border-top: 3px solid var(--a1); }
+  .dual-col.sys2 { background: rgba(26, 84, 144, 0.06); border-top: 3px solid var(--primary); }
+  .dual-col .sys-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .dual-col .sys-name { font-size: 24px; font-weight: 600; }
+  .dual-col.sys1 .sys-name { color: var(--a1); }
+  .dual-col.sys2 .sys-name { color: var(--primary); }
+  .dual-col .sys-desc { font-size: 14.5px; color: var(--ink); line-height: 1.45; }
+  .dual-col .sys-desc strong { font-weight: 600; }
+  .dual-col ul { margin: 0; padding-left: 1.2em; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+  .dual-col li { margin-bottom: 0.3vh; }
+  .dual-col li strong { color: var(--ink); }
+
+  /* Fox vs Hedgehog */
+  .beast-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5vw;
+    flex: 1;
+    min-height: 0;
+  }
+  .beast {
+    padding: 2.5vh 2vw;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2vh;
+  }
+  .beast.fox { background: rgba(193, 123, 78, 0.06); border-top: 3px solid var(--a1); }
+  .beast.hedgehog { background: rgba(142, 90, 122, 0.06); border-top: 3px solid var(--a3); }
+  .beast .beast-name { font-size: 28px; font-weight: 600; }
+  .beast.fox .beast-name { color: var(--a1); }
+  .beast.hedgehog .beast-name { color: var(--a3); }
+  .beast .beast-desc { font-size: 14.5px; color: var(--ink); line-height: 1.4; }
+  .beast ul { margin: 0.5vh 0 0 0; padding-left: 1.2em; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+  .beast li strong { color: var(--ink); font-weight: 600; }
+
+  /* Bond translation table */
+  .bond-table {
+    display: grid;
+    grid-template-columns: 1.1fr 1.6fr 1.6fr;
+    gap: 1px;
+    background: var(--rule);
+    margin: 1.5vh 0;
+    border: 1px solid var(--rule);
+    flex: 1;
+  }
+  .bt-cell {
+    background: var(--bg);
+    padding: 1.4vh 1.2vw;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .bt-cell.header {
+    background: #ede8dd;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+  }
+  .bt-cell .finding { color: var(--primary); font-weight: 600; }
+  .bt-cell .cite { color: var(--a1); font-size: 11.5px; font-style: italic; display: block; margin-top: 0.3vh; }
+
+  /* PAG anatomy SVG */
+  .pag-svg { width: 100%; height: 100%; }
+  .pag-svg text { font-family: inherit; fill: var(--ink); }
+  .pag-svg .region { stroke-width: 1.3; }
+  .pag-svg .region.pfc { fill: rgba(149, 144, 138, 0.15); stroke: var(--muted); stroke-dasharray: 4 3; }
+  .pag-svg .region.active { fill: rgba(193, 123, 78, 0.18); stroke: var(--a1); }
+  .pag-svg .region.cool { fill: rgba(74, 124, 116, 0.18); stroke: var(--a2); }
+  .pag-svg .label { font-size: 10.5px; fill: var(--ink-soft); }
+  .pag-svg .label-sm { font-size: 9.5px; fill: var(--muted); }
+  .pag-svg .arrow { fill: none; stroke: var(--ink-soft); stroke-width: 1.4; marker-end: url(#arrow-pag); }
+
+  /* Recommendations */
+  .recs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.8vh 2.5vw;
+    margin-top: 1vh;
+    flex: 1;
+  }
+  .rec-card {
+    padding: 1.8vh 1.6vw;
+    border-left: 3px solid var(--a2);
+    background: rgba(74, 124, 116, 0.04);
+  }
+  .rec-card.highlight { border-left-color: var(--a1); background: rgba(193, 123, 78, 0.05); }
+  .rec-num {
+    font-size: 11px;
+    color: var(--a2);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5vh;
+  }
+  .rec-card.highlight .rec-num { color: var(--a1); }
+  .rec-head {
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.6vh;
+    line-height: 1.25;
+  }
+  .rec-body {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .rec-body strong { color: var(--ink); }
+
+  /* Debiasing slide */
+  .debias-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3vw;
+    flex: 1;
+  }
+  .debias-col {
+    padding: 2vh 1.5vw;
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+  }
+  .debias-col.doesnt { background: rgba(168, 92, 124, 0.05); border-top: 3px solid var(--a3); }
+  .debias-col.does { background: rgba(107, 142, 88, 0.05); border-top: 3px solid var(--a4); }
+  .debias-col h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .debias-col.doesnt h3 { color: var(--a3); }
+  .debias-col.does h3 { color: var(--a4); }
+  .debias-col ul { margin: 0.5vh 0; padding-left: 1.2em; font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+  .debias-col li { margin-bottom: 0.7vh; }
+  .debias-col li strong { color: var(--ink); font-weight: 600; }
+
+  /* Navigation */
+  .footer-nav {
+    position: fixed;
+    bottom: 1.5vh; right: 2vw;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    background: rgba(245, 241, 232, 0.92);
+    padding: 0.4vh 1vw;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: transparent;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--a1);
+    transition: width 0.2s ease;
+  }
+  .hint {
+    position: fixed;
+    bottom: 1.5vh; left: 2vw;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media print {
+    html, body { overflow: visible; height: auto; }
+    .deck { height: auto; overflow: visible; }
+    .slide { display: flex !important; position: relative !important; page-break-after: always; height: 100vh; width: 100vw; }
+    .footer-nav, .hint, .progress-bar { display: none; }
+    canvas { max-width: 100%; height: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ==== SLIDE 1: HOOK ==== -->
+  <section class="slide slide-hook active" data-idx="1">
+    <div class="slide-header">
+      <span class="tag">Stress &amp; decision-making · Capital Group RQS</span>
+      <span class="num">01 / 11</span>
+    </div>
+    <div class="content">
+      <div class="hook-stack">
+        <div class="hook-lede">
+          In 2022, the written time horizons of our rates analysts <em>shortened</em> — at the exact moment the market needed longer thinking.
+        </div>
+        <div class="stats-row">
+          <div class="stat-block">
+            <div class="stat-number">−39%</div>
+            <div class="stat-label">Long-duration zeros in 2022<br>worst since 1754<sup>1</sup></div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">+425 bp</div>
+            <div class="stat-label">Fed funds in 9 months<br>fastest cycle in 40 years</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">Why?</div>
+            <div class="stat-label">The mechanism is biological<br>and the biology is measurable</div>
+          </div>
+        </div>
+        <div class="reveal">
+          <strong>The thesis of this talk:</strong> the horizon compression we observed has a well-characterized neuroendocrine signature. If we can see it in analyst notes, we can build instruments around it — measure it, gate on it, size around it — without relying on any analyst or PM to "just be less stressed." <em>Measurement → instrumentation → better decisions.</em>
+        </div>
+      </div>
+      <div class="footnote">
+        <div class="source"><sup>1</sup> Bank of America Global Research / Deutsche Bank (Schmelzing long-bond series). 2022 Treasury drawdown −12.5%, worst since 1973. Internal data on 2022 horizon compression shown on paired data slide (user-supplied empirical chart).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 2: KANDASAMY ==== -->
+  <section class="slide" data-idx="2">
+    <div class="slide-header">
+      <span class="tag">Science · Cortisol &amp; risk-taking</span>
+      <span class="num">02 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Eight days of elevated cortisol cut risk-taking by <em>44%</em>.</h1>
+      <div class="subtitle">A controlled experiment dosed healthy adults with hydrocortisone for 8 days, matching the cortisol elevation seen in real traders during a market downturn. Risk-taking collapsed.</div>
+      <div class="charts-row">
+        <div class="chart-wrap">
+          <div class="chart-mini-title">Utility curvature α  (lower = more risk-averse)</div>
+          <div class="chart-canvas"><canvas id="ch-alpha"></canvas></div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-mini-title">Certainty equivalent for a £100 coin-flip lottery</div>
+          <div class="chart-canvas"><canvas id="ch-ce"></canvas></div>
+        </div>
+      </div>
+      <div class="footnote">
+        <strong>What it means.</strong> Sustained cortisol reshapes how the brain values uncertain payoffs — the same risky lottery becomes substantially less attractive. Causal: appears under pharmacological dosing in healthy volunteers, not just correlated with trader stress.
+        <div class="source">
+          Source: <strong>Kandasamy et al. 2014, <i>PNAS</i> 111(9):3608–13</strong> · N=36, 8-day weight-adjusted hydrocortisone elevated cortisol 69%; α 0.50→0.35 (P=0.022); CE £25→£14 (−44%) · <a href="https://www.pnas.org/doi/10.1073/pnas.1317908111" target="_blank">pnas.org/doi/10.1073/pnas.1317908111</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 3: ARNSTEN ==== -->
+  <section class="slide" data-idx="3">
+    <div class="slide-header">
+      <span class="tag">Science · PFC and arousal</span>
+      <span class="num">03 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Too much stress chemistry breaks the prefrontal cortex's deliberative function.</h1>
+      <div class="subtitle">The prefrontal cortex operates within a narrow window of arousal. Push catecholamines (norepinephrine, dopamine) too low or too high and PFC working memory degrades. The "inverted-U" is demonstrated in monkey single-neuron recordings and decades of pharmacological work.</div>
+      <div class="single-chart-wrap">
+        <div class="chart-canvas"><canvas id="ch-arnsten"></canvas></div>
+      </div>
+      <div class="footnote">
+        <strong>What it means.</strong> Acute stress drives catecholamines past the optimal zone. PFC working memory drops. Decisions that need deliberation — multi-step planning, considering counterfactuals, holding future scenarios in mind — degrade. Lower-order circuits (amygdala, striatum) take over. Causal evidence: β-blockers restore PFC function under stress; α2A-agonists (guanfacine) shift tolerance higher.
+        <div class="source">
+          <strong>Arnsten 2009, <i>Nat Rev Neurosci</i> 10:410–22</strong> · <a href="https://www.nature.com/articles/nrn2648" target="_blank">nature.com/articles/nrn2648</a> · Empirical inverted-U in monkey PFC neurons: <strong>Vijayraghavan et al. 2007, <i>Nat Neurosci</i> 10:376–84</strong> · <a href="https://www.nature.com/articles/nn1846" target="_blank">nature.com/articles/nn1846</a> · Lab figure: <a href="https://medicine.yale.edu/lab/arnsten/research/invertedu/" target="_blank">medicine.yale.edu/lab/arnsten/research/invertedu</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 4: HERMANS ==== -->
+  <section class="slide" data-idx="4">
+    <div class="slide-header">
+      <span class="tag">Science · Whole-brain network reconfiguration</span>
+      <span class="num">04 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Acute stress reconfigures the <em>whole brain</em>: salience network up, executive network down.</h1>
+      <div class="subtitle">In a placebo-controlled fMRI study, exposing healthy adults to a fear-related acute stressor caused a brain-wide network shift. The "salience hijack" is mediated by noradrenergic signaling — propranolol blocks it, the cortisol blocker metyrapone does not.</div>
+
+      <div class="link-card">
+        <div class="link-label">Primary source · open access</div>
+        <div class="paper-title">"Stress-Related Noradrenergic Activity Prompts Large-Scale Neural Network Reconfiguration"</div>
+        <div class="paper-cite">Hermans, van Marle, Ossewaarde, Henckens et al. · <i>Science</i> 334(6059):1151–53 · 25 Nov 2011</div>
+        <div class="paper-url">
+          Paper: <a href="https://www.science.org/doi/10.1126/science.1209603" target="_blank">science.org/doi/10.1126/science.1209603</a> &nbsp;·&nbsp;
+          Open-access PDF (figures): <a href="https://pdodds.w3.uvm.edu/files/papers/others/2011/hermans2011a.pdf" target="_blank">pdodds.w3.uvm.edu/files/papers/others/2011/hermans2011a.pdf</a>
+        </div>
+      </div>
+
+      <div class="findings-grid">
+        <div class="finding-card up">
+          <div class="finding-label">UP under stress</div>
+          <div class="finding-text"><strong>Salience network</strong> — anterior insula, dorsal ACC, amygdala, hypothalamus, midbrain. Functional connectivity strengthens with stress-response magnitude.</div>
+        </div>
+        <div class="finding-card down">
+          <div class="finding-label">DOWN under stress</div>
+          <div class="finding-text"><strong>Executive control network</strong> — dorsolateral PFC, lateral parietal cortex. Top-down control weakens.</div>
+        </div>
+        <div class="finding-card primary">
+          <div class="finding-label">Noradrenaline drives it</div>
+          <div class="finding-text"><strong>Propranolol BLOCKS</strong> the reconfiguration. A β-adrenergic blocker prevents the stress-induced network shift — implicating the locus coeruleus as the proximal cause.</div>
+        </div>
+        <div class="finding-card primary">
+          <div class="finding-label">Cortisol does NOT</div>
+          <div class="finding-text"><strong>Metyrapone does NOT block</strong> the fast salience shift. Cortisol drives a slower, recovery-phase reconfiguration on a different time-scale.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 5: TIME HORIZON ==== -->
+  <section class="slide" data-idx="5">
+    <div class="slide-header">
+      <span class="tag">Science · Time horizon compression</span>
+      <span class="num">05 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Under acute cortisol, we choose <em>smaller, sooner</em> over larger, later.</h1>
+      <div class="subtitle">A double-blind hydrocortisone challenge: 15 minutes after dosing, subjects became markedly more impulsive in intertemporal choice — preferring small immediate payoffs over larger delayed ones. Acute and time-limited; aligns with non-genomic glucocorticoid signaling on fast timescales.</div>
+      <div class="findings-grid">
+        <div class="finding-card up">
+          <div class="finding-label">Acute · 15 min post-cortisol</div>
+          <div class="finding-text"><strong>Strongly increased preference for the small, soon reward</strong> over the larger, delayed reward. Effect present at 15 min, absent at 195 min.<br><span style="font-size: 12px; color: var(--muted);">Cornelisse et al. 2018, <i>Psychoneuroendocrinology</i> · 10 mg hydrocortisone vs placebo</span></div>
+        </div>
+        <div class="finding-card down">
+          <div class="finding-label">Chronic · 8-day cortisol elevation</div>
+          <div class="finding-text"><strong>Risk premium collapses 44%</strong>; utility curvature flattens.<br><span style="font-size: 12px; color: var(--muted);">Kandasamy et al. 2014, <i>PNAS</i></span></div>
+        </div>
+        <div class="finding-card">
+          <div class="finding-label">Mechanism · why horizons matter</div>
+          <div class="finding-text"><strong>Myopic loss aversion.</strong> When the evaluation horizon shortens, loss aversion (λ ≈ 2.25) mechanically dominates — explaining the equity premium puzzle and why high-frequency re-evaluation amplifies risk aversion.<br><span style="font-size: 12px; color: var(--muted);">Benartzi &amp; Thaler 1995, <i>QJE</i></span></div>
+        </div>
+        <div class="finding-card">
+          <div class="finding-label">Honest caveat</div>
+          <div class="finding-text">Acute psychosocial-stress effects on discounting are mixed across studies. The cleanest causal evidence is <em>pharmacological</em> (Cornelisse 2018) and <em>chronic cortisol</em> (Kandasamy 2014); psychosocial stressors in the lab show more variable effects.</div>
+        </div>
+      </div>
+      <div class="footnote">
+        <div class="source">
+          Sources: <a href="https://pubmed.ncbi.nlm.nih.gov/29306836/" target="_blank">Cornelisse et al. 2018, <i>Psychoneuroendocrinology</i> 88:161–68</a> · <a href="https://www.pnas.org/doi/10.1073/pnas.1317908111" target="_blank">Kandasamy et al. 2014, <i>PNAS</i></a> · Benartzi &amp; Thaler 1995, <i>QJE</i> 110(1):73–92
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 6: PAG FIGHT/FLIGHT ==== -->
+  <section class="slide" data-idx="6">
+    <div class="slide-header">
+      <span class="tag">Science · Defensive-response circuits</span>
+      <span class="num">06 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Under acute threat, control shifts from deliberation to <em>reflexive defensive circuits</em>.</h1>
+      <div class="subtitle">Four columns of the periaqueductal gray (PAG) — a midbrain structure — each drive a different defensive program. The brain hands off from cognitive appraisal (ventromedial PFC) to PAG-mediated programs as threat proximity rises.</div>
+      <div class="single-chart-wrap">
+        <svg class="pag-svg" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="pag-t pag-d">
+          <title id="pag-t">Four PAG columns of the defensive-response system</title>
+          <desc id="pag-d">PFC (offline under acute stress) hands control to amygdala and PAG columns driving fight, flight, confrontation, or freeze.</desc>
+          <defs>
+            <marker id="arrow-pag" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5a5550"/></marker>
+          </defs>
+          <rect class="region pfc" x="330" y="20" width="240" height="44" rx="4"/>
+          <text x="450" y="48" text-anchor="middle" font-weight="600" font-size="14">Prefrontal cortex (vmPFC)</text>
+          <text x="450" y="78" text-anchor="middle" class="label">Offline under acute stress (Arnsten 2009)</text>
+
+          <rect class="region active" x="60" y="120" width="180" height="44" rx="4"/>
+          <text x="150" y="148" text-anchor="middle" font-weight="600" font-size="13">Amygdala</text>
+          <text x="150" y="178" text-anchor="middle" class="label">Threat detector · potentiated</text>
+
+          <rect class="region active" x="660" y="120" width="180" height="44" rx="4"/>
+          <text x="750" y="148" text-anchor="middle" font-weight="600" font-size="13">Hypothalamus</text>
+          <text x="750" y="178" text-anchor="middle" class="label">SAM + HPA activation</text>
+
+          <rect x="110" y="220" width="680" height="160" rx="4" fill="none" stroke="#5a5550" stroke-width="1.2"/>
+          <text x="450" y="245" text-anchor="middle" font-weight="600" font-size="14">Periaqueductal gray · four functional columns (Bandler &amp; Shipley 1994)</text>
+
+          <rect class="region active" x="135" y="265" width="150" height="95" rx="3"/>
+          <text x="210" y="295" text-anchor="middle" font-weight="700" font-size="15">Fight</text>
+          <text x="210" y="315" text-anchor="middle" class="label">dorsomedial PAG</text>
+          <text x="210" y="335" text-anchor="middle" class="label-sm">active-risk-up</text>
+          <text x="210" y="350" text-anchor="middle" class="label-sm">in a PM</text>
+
+          <rect class="region active" x="295" y="265" width="150" height="95" rx="3"/>
+          <text x="370" y="295" text-anchor="middle" font-weight="700" font-size="15">Flight</text>
+          <text x="370" y="315" text-anchor="middle" class="label">dorsolateral PAG</text>
+          <text x="370" y="335" text-anchor="middle" class="label-sm">benchmark-hug</text>
+          <text x="370" y="350" text-anchor="middle" class="label-sm">in a PM</text>
+
+          <rect class="region active" x="455" y="265" width="150" height="95" rx="3"/>
+          <text x="530" y="295" text-anchor="middle" font-weight="700" font-size="15">Confrontation</text>
+          <text x="530" y="315" text-anchor="middle" class="label">lateral PAG</text>
+          <text x="530" y="335" text-anchor="middle" class="label-sm">active counter-position</text>
+          <text x="530" y="350" text-anchor="middle" class="label-sm">in a PM</text>
+
+          <rect class="region cool" x="615" y="265" width="150" height="95" rx="3"/>
+          <text x="690" y="295" text-anchor="middle" font-weight="700" font-size="15">Freeze</text>
+          <text x="690" y="315" text-anchor="middle" class="label">ventrolateral PAG</text>
+          <text x="690" y="335" text-anchor="middle" class="label-sm">no-trade / inaction</text>
+          <text x="690" y="350" text-anchor="middle" class="label-sm">in a PM</text>
+
+          <path class="arrow" d="M 330,62 Q 240,90 160,120"/>
+          <path class="arrow" d="M 570,62 Q 660,90 740,120"/>
+          <path class="arrow" d="M 150,164 L 210,265"/>
+          <path class="arrow" d="M 170,164 L 370,265"/>
+          <path class="arrow" d="M 190,164 L 530,265"/>
+          <path class="arrow" d="M 750,164 L 690,265"/>
+
+          <text x="450" y="405" text-anchor="middle" class="label" font-style="italic">The functional decomposition is a causal map for instrument design — not a literal claim that a benchmark-hugging trade is a dorsolateral-PAG read-out.</text>
+        </svg>
+      </div>
+      <div class="footnote">
+        <div class="source">
+          <strong>Bandler &amp; Shipley 1994, <i>Trends in Neurosciences</i> 17:379–89</strong> (PAG four-column anatomy) · <strong>Mobbs et al. 2007, <i>Science</i> 317:1079–83</strong> on PFC→PAG switch as threat gets proximal · <a href="https://www.science.org/doi/10.1126/science.1144298" target="_blank">science.org/doi/10.1126/science.1144298</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 7: KAHNEMAN SYSTEM 1/2 ==== -->
+  <section class="slide" data-idx="7">
+    <div class="slide-header">
+      <span class="tag">Psychology · Dual-process judgment</span>
+      <span class="num">07 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Kahneman: two systems — and stress pushes us into the wrong one.</h1>
+      <div class="subtitle">Daniel Kahneman's dual-process framework is the psychological bridge between the neuroscience we just saw and the practical judgment errors analysts and PMs make. When Arnsten's PFC goes offline, System 2 goes offline — and System 1 takes over the decision.</div>
+      <div class="dual-cols">
+        <div class="dual-col sys1">
+          <div class="sys-label">Fast · automatic · effortless</div>
+          <div class="sys-name">System 1</div>
+          <div class="sys-desc">Pattern-matching, intuition, association. Runs constantly, below awareness. <strong>Biases live here</strong>: anchoring, availability, loss aversion, narrow framing, WYSIATI ("what you see is all there is").</div>
+          <ul>
+            <li><strong>Dominates under load / stress</strong> — cognitive resources exhausted, System 2 can't monitor.</li>
+            <li><strong>Fools us</strong> into treating recent vivid events (last week's CPI surprise) as representative.</li>
+            <li><strong>Substitutes easy questions</strong> — "is this a good trade?" silently becomes "does the story feel right?"</li>
+          </ul>
+        </div>
+        <div class="dual-col sys2">
+          <div class="sys-label">Slow · deliberate · effortful</div>
+          <div class="sys-name">System 2</div>
+          <div class="sys-desc">Rule-based analysis, mental arithmetic, holding multiple scenarios in mind. <strong>Requires an intact PFC</strong> — the exact circuit that goes offline under catecholamine surge.</div>
+          <ul>
+            <li><strong>Energy-expensive</strong> — ego-depletion effects, glucose sensitive.</li>
+            <li><strong>Lazy by default</strong> — endorses System 1 unless actively prompted.</li>
+            <li><strong>Outperforms experts</strong> when structured (Meehl's simple-rule-beats-clinician finding Kahneman repeatedly cites).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footnote">
+        <strong>Why this matters for investment.</strong> Most PMs believe their decisions are System 2 — models, data, frameworks. In fact, under stress, cognitive load, or time pressure, decisions silently drop into System 1. The neuroscience (Arnsten, Hermans) gives a biological mechanism; Kahneman gives the practical vocabulary for what it feels like and how to design around it.
+        <div class="source">
+          <strong>Kahneman 2011, <i>Thinking, Fast and Slow</i></strong> (Farrar, Straus &amp; Giroux) · <a href="https://us.macmillan.com/books/9780374533557/thinkingfastandslow/" target="_blank">publisher page</a> · Concept origins: Stanovich &amp; West 2000; Evans &amp; Stanovich 2013 <i>Perspectives on Psychological Science</i> 8(3):223. Kahneman won the 2002 Nobel in Economics (with Vernon Smith) for prospect theory developed with Amos Tversky.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 8: FOX VS HEDGEHOG ==== -->
+  <section class="slide" data-idx="8">
+    <div class="slide-header">
+      <span class="tag">Psychology · What makes an expert forecaster reliable</span>
+      <span class="num">08 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Tetlock: foxes beat hedgehogs. Broad, skeptical, self-updating thinkers forecast better than big-idea experts.</h1>
+      <div class="subtitle">Philip Tetlock tracked 284 political and economic experts for 20 years — 82,361 forecasts. He found two styles (borrowed from Isaiah Berlin's essay on Tolstoy): <em>hedgehogs</em> who know one big thing and <em>foxes</em> who know many small things. Foxes won decisively. Follow-up work (the Good Judgment Project) identified "superforecasters" — they are all fox-style.</div>
+      <div class="beast-row">
+        <div class="beast hedgehog">
+          <div class="beast-name">🦔 Hedgehog</div>
+          <div class="beast-desc"><em>"One big idea."</em> Confident, theoretical, deductive. Organizes all evidence around a single unifying framework. More likely to appear on TV.</div>
+          <ul>
+            <li><strong>Worse forecasters</strong> — Tetlock found hedgehogs performed about the same as <em>random chance</em> on long-term political/economic predictions.</li>
+            <li><strong>Overconfident.</strong> Forecasts they call "certain" are wrong ~20–25% of the time; they assign near-zero probability to outcomes that happen 15% of the time.</li>
+            <li><strong>Fail to update.</strong> Disconfirming evidence gets reinterpreted as "noise," "timing," or "anomaly."</li>
+          </ul>
+        </div>
+        <div class="beast fox">
+          <div class="beast-name">🦊 Fox</div>
+          <div class="beast-desc"><em>"Many small things."</em> Cautious, empirical, inductive. Uses multiple frameworks, acknowledges uncertainty, updates on evidence. Less media-telegenic.</div>
+          <ul>
+            <li><strong>Better-calibrated forecasts.</strong> When a superforecaster says 70%, the base rate of occurrence is close to 70%.</li>
+            <li><strong>Superforecasters</strong> (Good Judgment Project, IARPA) outperformed intelligence analysts with classified information by <strong>~30%</strong>.</li>
+            <li><strong>Habits:</strong> decompose questions, use base rates, think in ranges not points, actively seek disconfirming evidence.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footnote">
+        <strong>Implication for RQS.</strong> The practical lesson is not "become a fox overnight" — individual disposition is stable. It is: <em>reward fox-style forecasting</em> in process and incentives. Structured calibration tracking (Brier scores), base-rate priors built into research templates, and explicit uncertainty intervals on analyst conviction are all <em>fox-producing instruments</em>.
+        <div class="source">
+          <strong>Tetlock 2005, <i>Expert Political Judgment: How Good Is It? How Can We Know?</i></strong> (Princeton) · <strong>Tetlock &amp; Gardner 2015, <i>Superforecasting</i></strong> (Crown) · <a href="https://goodjudgment.com/" target="_blank">goodjudgment.com</a> (Good Judgment Inc., commercial spin-out of GJP) · Origin: <a href="https://en.wikipedia.org/wiki/The_Hedgehog_and_the_Fox" target="_blank">Berlin 1953</a>, from the Greek poet Archilochus: <em>"The fox knows many things; the hedgehog knows one big thing."</em>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 9: BOND-MARKET TRANSLATION ==== -->
+  <section class="slide" data-idx="9">
+    <div class="slide-header">
+      <span class="tag">Audience fit · Bond-market translation</span>
+      <span class="num">09 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Each behavioral finding maps to a bond-market channel.</h1>
+      <div class="subtitle">The behavioral and rational-frictions literatures are complements, not substitutes — in the Adaptive Markets Hypothesis frame (Lo 2004). RQS's value-add is the regime classifier: which channel dominates, in which instrument, at which point in the cycle.</div>
+      <div class="bond-table">
+        <div class="bt-cell header">Behavioral finding</div>
+        <div class="bt-cell header">Bond-market channel (rational-frictions)</div>
+        <div class="bt-cell header">Observable signature</div>
+
+        <div class="bt-cell"><span class="finding">Horizon compression<br>under drawdown</span></div>
+        <div class="bt-cell">
+          <strong>Slow-moving capital.</strong>
+          <span class="cite">Duffie 2010 AFA · Haddad-Moreira-Muir 2021 RFS on March 2020 IG ETF dislocation</span>
+        </div>
+        <div class="bt-cell">Bid-ask widening and arbitrage violations in specific duration / credit buckets; speed of mean reversion conditional on intermediary balance-sheet proxies.</div>
+
+        <div class="bt-cell"><span class="finding">Benchmark-hug<br>flight signature</span></div>
+        <div class="bt-cell">
+          <strong>Intermediary asset pricing · funding-liquidity spirals.</strong>
+          <span class="cite">He &amp; Krishnamurthy 2013 AER · Brunnermeier &amp; Pedersen 2009 RFS · Adrian-Etula-Muir 2014 JF</span>
+        </div>
+        <div class="bt-cell">Cross-sectional de-risking (duration, credit-beta, illiquidity) correlated with dealer-VaR / margin triggers; price deviation scales with intermediary equity ratios.</div>
+
+        <div class="bt-cell"><span class="finding">Conviction at the tails<br>of confidence</span></div>
+        <div class="bt-cell">
+          <strong>Credit-cycle over-extrapolation.</strong>
+          <span class="cite">Greenwood &amp; Hanson 2013 RFS · Bordalo, Gennaioli &amp; Shleifer 2018 JF on diagnostic expectations</span>
+        </div>
+        <div class="bt-cell">High-issuer-quality periods predict low forward credit returns; over-extrapolation in IG/HY spread deviations from fundamentals.</div>
+
+        <div class="bt-cell"><span class="finding">State-of-brain<br>biomarkers</span></div>
+        <div class="bt-cell">
+          <strong>Flight-to-quality microstructure.</strong>
+          <span class="cite">Vayanos 2004 NBER · Krishnamurthy &amp; Vissing-Jorgensen 2012 JPE on Treasury convenience yield</span>
+        </div>
+        <div class="bt-cell">Convenience-yield jumps, on-the-run / off-the-run spreads, CDS-bond basis widening concurrent with stress-regime indicators.</div>
+      </div>
+      <div class="footnote">
+        <strong>The framing for RQS.</strong> A Treasury PM's cortisol elevation in a drawdown is not a different phenomenon from dealer balance-sheet constraints — they are <em>coupled</em>. The behavioral lens sharpens the regime classifier; the rational-frictions lens sharpens the pricing model. Use both.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 10: DEBIASING ==== -->
+  <section class="slide" data-idx="10">
+    <div class="slide-header">
+      <span class="tag">Debiasing · What works vs what doesn't</span>
+      <span class="num">10 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Self-awareness alone doesn't fix bias. <em>Process</em> does.</h1>
+      <div class="subtitle">Kahneman's late-career view: "I've been studying biases for 50 years and I haven't made much progress correcting mine. Organizations beat individuals." The literature backs this up — process-level interventions are where the durable evidence lives.</div>
+      <div class="debias-split">
+        <div class="debias-col doesnt">
+          <h3>What doesn't (reliably) work</h3>
+          <ul>
+            <li><strong>Bias-awareness training.</strong> Morewedge et al. 2015 — IARPA-funded computer games reduced several biases ~20–30% short-term. Good news. <strong>But</strong>: transfer evidence thin (one MBA field study); <em>people with high "bias blind spot" scores benefit least</em> (Scopelliti 2015) — that's senior PMs.</li>
+            <li><strong>"Just pay attention."</strong> Haddara &amp; Rahnev 2022 — moderate Bayesian evidence for <em>no</em> metacognitive-training effect under controlled conditions.</li>
+            <li><strong>Post-mortems after losses.</strong> Hindsight bias makes them unreliable for updating — you learn the wrong lesson.</li>
+          </ul>
+        </div>
+        <div class="debias-col does">
+          <h3>What does work</h3>
+          <ul>
+            <li><strong>Premortem.</strong> Gary Klein: "Imagine the decision failed. Why?" Surfaces ~30% more risk factors than standard review. Does not require PFC capacity during stress.</li>
+            <li><strong>Checklists with teeth.</strong> Pronovost 2006 — central-line infection checklist cut CLABSI by ~66% in Michigan ICUs. <em>Implementation fidelity is the binding constraint</em> (Urbach 2014 found Haynes-style surgical checklists had no benefit when rolled out without culture change).</li>
+            <li><strong>Noise reduction / decision hygiene.</strong> Kahneman, Sibony &amp; Sunstein 2021 — structured decomposition, delay aggregation, independent judgments before discussion. Cuts variance in expert judgment by 30–50%.</li>
+            <li><strong>Calibration tracking.</strong> Brier scores on analyst forecasts; update sizing bands using calibration, not raw confidence. The fox-producing instrument (see slide 8).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footnote">
+        <div class="source">
+          <strong>Morewedge et al. 2015</strong>, <i>Policy Insights BBS</i> 2(1):129 · <strong>Scopelliti et al. 2015</strong>, <i>Mgmt Sci</i> 61(10):2468 · <strong>Klein 2007</strong>, <i>HBR</i> "Performing a Project Premortem" · <strong>Pronovost et al. 2006</strong>, <i>NEJM</i> 355:2725 · <strong>Urbach et al. 2014</strong>, <i>NEJM</i> 370:1029 · <strong>Kahneman, Sibony &amp; Sunstein 2021</strong>, <i>Noise</i> (Little, Brown)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE 11: RECOMMENDATIONS + CLOSE ==== -->
+  <section class="slide" data-idx="11">
+    <div class="slide-header">
+      <span class="tag">Recommendations · What to do with this</span>
+      <span class="num">11 / 11</span>
+    </div>
+    <div class="content">
+      <h1>Four instruments, each grounded in mechanism and in our own data.</h1>
+      <div class="subtitle">None of these requires any analyst or PM to be less biased. They absorb known biases as design parameters — the form of debiasing with the most durable evidence base in expert populations.</div>
+      <div class="recs-grid">
+        <div class="rec-card">
+          <div class="rec-num">01 · From A1a (heterogeneous confidence)</div>
+          <div class="rec-head">Per-analyst confidence normalization</div>
+          <div class="rec-body">
+            Surface <strong>percentile-within-analyst</strong>, not absolute confidence level. The biological signal (metacognitive prior precision) is only recoverable on the relative scale — cross-analyst comparison is biology-blind.
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-num">02 · From A1b (tail-signal)</div>
+          <div class="rec-head">Tail-weighted sizing bands &amp; calibration tracking</div>
+          <div class="rec-body">
+            Signal-detection theory predicts the tails carry more information than the middle. Size with more weight on extreme confidence, paired with <strong>Brier-score calibration tracking</strong> — the fox-producing instrument.
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-num">03 · From A1c + B1 + Hermans + Arnsten</div>
+          <div class="rec-head">Stress-window decision protocol</div>
+          <div class="rec-body">
+            Bright-line gates on VIX / drawdown / realized-vol. Mandatory <strong>premortem</strong> + pre-committed checklist before re-allocation. Rationale: PFC capacity is lowest exactly when self-awareness would need to fire (Arnsten + Hermans) — process must precede stress, not be summoned during it.
+          </div>
+        </div>
+        <div class="rec-card highlight">
+          <div class="rec-num">04 · From chronobiology</div>
+          <div class="rec-head">Sleep &amp; scheduling guardrails around FOMC/CPI</div>
+          <div class="rec-body">
+            <strong>Avoid major re-allocations on sleep-deprived days</strong>; formalize pre-FOMC / pre-CPI guardrails. Yoo 2007 showed sleep loss amplifies amygdala response ~60% and decouples it from PFC — sleep-deprived looks neurally like acute-stressed. Parallel: opt-in wearable pilot (N≈20, pre-registered windows).
+          </div>
+        </div>
+      </div>
+      <div class="footnote">
+        <strong>Close.</strong> The horizon collapse in our 2022 rates analyst notes is the text-output signature of a well-characterized neuroendocrine pathway. We cannot make the biology go away. We can <em>measure it and instrument around it</em> — four concrete tools, each with mechanism evidence and a process-level validation base. <em>Measure → instrument → decide.</em>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="progress-bar"><div class="fill" id="progfill" style="width: 9.1%;"></div></div>
+<div class="footer-nav">
+  Slide <span id="curnum">1</span> / 11 &nbsp;·&nbsp; ← / → to navigate &nbsp;·&nbsp; <kbd>F</kbd> fullscreen
+</div>
+<div class="hint">Stress &amp; decision-making · RQS Final · v5</div>
+
+<script>
+  // ============ Chart.js global defaults ============
+  const COLORS = {
+    ink:       '#2a2a2a',
+    inkSoft:   '#5a5550',
+    muted:     '#95908a',
+    grid:      '#e3dfd4',
+    rule:      '#d4d0c4',
+    primary:   '#1a5490',
+    a1:        '#c17b4e',
+    a2:        '#4a7c74',
+    a3:        '#8e5a7a',
+  };
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif';
+  Chart.defaults.color = COLORS.ink;
+  Chart.defaults.borderColor = COLORS.grid;
+  Chart.defaults.elements.line.tension = 0;
+  Chart.defaults.elements.line.borderWidth = 2.4;
+  Chart.defaults.elements.point.radius = 5;
+  Chart.defaults.animation = false;
+  Chart.defaults.plugins.legend.labels.boxWidth = 12;
+  Chart.defaults.plugins.legend.labels.boxHeight = 12;
+  Chart.defaults.plugins.legend.labels.font = { size: 11.5 };
+  Chart.defaults.plugins.tooltip.enabled = false;
+
+  const axisCfg = (title) => ({
+    title: { display: !!title, text: title, color: COLORS.inkSoft, font: { size: 11.5, weight: 'normal' } },
+    grid:  { color: COLORS.grid, drawBorder: false, lineWidth: 1 },
+    border:{ color: COLORS.rule },
+    ticks: { color: COLORS.inkSoft, font: { size: 10.5 } },
+  });
+
+  // ===== Kandasamy α =====
+  new Chart(document.getElementById('ch-alpha'), {
+    type: 'bar',
+    data: {
+      labels: ['Placebo', '8-day cortisol'],
+      datasets: [{
+        data: [0.50, 0.35],
+        backgroundColor: [COLORS.a2, COLORS.a1],
+        borderColor: [COLORS.a2, COLORS.a1],
+        borderWidth: 1.5,
+        borderRadius: 4,
+        categoryPercentage: 0.55,
+        barPercentage: 0.78,
+      }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      scales: {
+        x: { ...axisCfg(''), ticks: { color: COLORS.ink, font: { size: 12.5, weight: '500' } } },
+        y: { ...axisCfg('Utility α  (Kandasamy 2014, P=0.022)'), min: 0, max: 0.65, ticks: { stepSize: 0.1 } },
+      },
+      plugins: { legend: { display: false } },
+    }
+  });
+
+  // ===== Kandasamy CE =====
+  new Chart(document.getElementById('ch-ce'), {
+    type: 'bar',
+    data: {
+      labels: ['Placebo', '8-day cortisol'],
+      datasets: [{
+        data: [25, 14],
+        backgroundColor: [COLORS.a2, COLORS.a1],
+        borderColor: [COLORS.a2, COLORS.a1],
+        borderWidth: 1.5,
+        borderRadius: 4,
+        categoryPercentage: 0.55,
+        barPercentage: 0.78,
+      }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      responsive: true,
+      scales: {
+        x: { ...axisCfg(''), ticks: { color: COLORS.ink, font: { size: 12.5, weight: '500' } } },
+        y: { ...axisCfg('Certainty equivalent (£) · −44%'), min: 0, max: 32 },
+      },
+      plugins: { legend: { display: false } },
+    }
+  });
+
+  // ===== Arnsten inverted-U =====
+  (function() {
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const x = i / 15;
+      const y = Math.exp(-Math.pow((x - 1.7), 2) / 0.7);
+      pts.push({ x: x, y: y });
+    }
+    new Chart(document.getElementById('ch-arnsten'), {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'PFC working-memory performance',
+            data: pts,
+            borderColor: COLORS.primary,
+            backgroundColor: COLORS.primary + '22',
+            pointRadius: 0,
+            fill: true,
+            borderWidth: 2.6,
+          },
+          { label: 'Drowsy / understimulated', data: [{x: 0.5, y: 0}, {x: 0.5, y: 1}],
+            borderColor: COLORS.a3, borderDash: [4,4], pointRadius: 0, showLine: true, fill: false, borderWidth: 1.5 },
+          { label: 'Optimal arousal', data: [{x: 1.7, y: 0}, {x: 1.7, y: 1}],
+            borderColor: COLORS.a2, borderDash: [4,4], pointRadius: 0, showLine: true, fill: false, borderWidth: 1.5 },
+          { label: 'Acute stress regime', data: [{x: 3.2, y: 0}, {x: 3.2, y: 1}],
+            borderColor: COLORS.a1, borderDash: [4,4], pointRadius: 0, showLine: true, fill: false, borderWidth: 1.5 },
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        parsing: false,
+        scales: {
+          x: { ...axisCfg('Catecholamine level (norepinephrine, dopamine) →'),
+               type: 'linear', min: 0, max: 4, ticks: { display: false } },
+          y: { ...axisCfg('PFC working-memory performance'),
+               min: 0, max: 1.05, ticks: { display: false } },
+        },
+        plugins: { legend: { position: 'bottom', align: 'center' } },
+      }
+    });
+  })();
+
+  // ============ Slide navigation ============
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('active', k === idx));
+    document.getElementById('curnum').textContent = idx + 1;
+    document.getElementById('progfill').style.width = ((idx + 1) / slides.length * 100) + '%';
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { show(idx + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(idx - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    } else if (/^[1-9]$/.test(e.key)) {
+      show(parseInt(e.key, 10) - 1);
+    }
+  });
+  show(0);
+</script>
+</body>
+</html>

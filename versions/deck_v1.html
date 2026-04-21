@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Behavioral Biases in Investment Portfolios — RQS Final</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:          #f5f1e8;
+    --ink:         #2a2a2a;
+    --ink-soft:    #5a5550;
+    --rule:        #d4d0c4;
+    --grid:        #e3dfd4;
+    --muted:       #95908a;
+    --primary:     #1a5490;
+    --accent-1:    #c17b4e;
+    --accent-2:    #4a7c74;
+    --accent-3:    #8e5a7a;
+    --accent-4:    #6b8e58;
+    --accent-5:    #a85c7c;
+    --success:     #527a5c;
+    --warn:        #b55a3c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+  .deck {
+    position: relative;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 4vh 6vw;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .slide.active { display: flex; }
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1vh;
+    margin-bottom: 2.5vh;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .slide-header .tag { color: var(--muted); }
+  .slide-header .num { font-variant-numeric: tabular-nums; }
+  h1 {
+    font-size: 44px;
+    font-weight: 600;
+    margin: 0 0 1.5vh 0;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-size: 28px;
+    font-weight: 500;
+    margin: 0 0 1.2vh 0;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .eyebrow {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-1);
+    margin-bottom: 1vh;
+    font-weight: 600;
+  }
+  .content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3vw;
+    flex: 1;
+    min-height: 0;
+  }
+  .chart-wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.3vh;
+  }
+  .chart-subtitle {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 1vh;
+    font-style: italic;
+  }
+  .chart-canvas {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+  }
+  .chart-source {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 0.6vh;
+    font-variant-numeric: tabular-nums;
+  }
+  .takeaway {
+    margin-top: 2vh;
+    padding: 1.5vh 2vw;
+    background: rgba(26, 84, 144, 0.06);
+    border-left: 3px solid var(--primary);
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .takeaway strong { color: var(--primary); font-weight: 600; }
+  .caption {
+    margin-top: 1.5vh;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+    max-width: 95%;
+  }
+  .caption strong { color: var(--ink); font-weight: 600; }
+  .caption em { color: var(--accent-1); font-style: normal; font-weight: 500; }
+  .footer-nav {
+    position: fixed;
+    bottom: 1.5vh; right: 2vw;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    background: rgba(245, 241, 232, 0.9);
+    padding: 0.3vh 1vw;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+  .hint {
+    position: fixed;
+    bottom: 1.5vh; left: 2vw;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Hook slide */
+  .slide-hook .hero {
+    flex: 1;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 2vh;
+  }
+  .slide-hook .hero-quote {
+    font-size: 42px;
+    font-weight: 500;
+    line-height: 1.2;
+    max-width: 90%;
+    color: var(--ink);
+  }
+  .slide-hook .hero-quote em {
+    color: var(--accent-1);
+    font-style: italic;
+    font-weight: 500;
+  }
+  .slide-hook .stats-row {
+    display: flex;
+    gap: 4vw;
+    padding-top: 2vh;
+    border-top: 1px solid var(--rule);
+  }
+  .stat-block { flex: 1; }
+  .stat-number {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 0.5vh;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Thesis slide */
+  .slide-thesis { justify-content: center; align-items: flex-start; }
+  .slide-thesis .content { justify-content: center; }
+  .slide-thesis .eyebrow { font-size: 14px; margin-bottom: 3vh; }
+  .slide-thesis h1 {
+    font-size: 56px;
+    font-weight: 500;
+    line-height: 1.15;
+    max-width: 90%;
+    margin-bottom: 4vh;
+  }
+  .slide-thesis h1 em {
+    color: var(--accent-1);
+    font-style: italic;
+    font-weight: 500;
+  }
+  .slide-thesis .subtext {
+    font-size: 20px;
+    color: var(--ink-soft);
+    max-width: 80%;
+    line-height: 1.4;
+  }
+
+  /* Framework slide */
+  .framework-grid {
+    display: grid;
+    grid-template-columns: 1.2fr repeat(6, 1fr);
+    grid-template-rows: auto repeat(3, 1fr);
+    gap: 2px;
+    background: var(--rule);
+    margin: 2vh 0;
+    border: 1px solid var(--rule);
+  }
+  .fg-cell {
+    background: var(--bg);
+    padding: 1.2vh 1vw;
+    font-size: 13px;
+    line-height: 1.3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .fg-cell.header {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+    background: #ede8dd;
+    text-align: center;
+    padding: 0.8vh 0.4vw;
+  }
+  .fg-cell.row-label {
+    font-weight: 600;
+    color: var(--primary);
+    background: #ede8dd;
+  }
+  .fg-cell.evidence {
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 11.5px;
+    text-align: center;
+    position: relative;
+  }
+  .fg-cell.evidence::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent-2);
+  }
+
+  /* Data placeholder */
+  .slide-placeholder .content {
+    align-items: center;
+    justify-content: center;
+  }
+  .placeholder-box {
+    width: 70%;
+    max-width: 820px;
+    padding: 8vh 4vw;
+    border: 2px dashed var(--muted);
+    text-align: center;
+    background: rgba(234, 228, 215, 0.3);
+  }
+  .placeholder-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 2vh;
+  }
+  .placeholder-title {
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 2vh;
+  }
+  .placeholder-hint {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    max-width: 90%;
+    margin: 0 auto;
+  }
+
+  /* Recs slide */
+  .recs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2vh 3vw;
+    margin-top: 1vh;
+  }
+  .rec-card {
+    padding: 2vh 1.5vw;
+    border-left: 3px solid var(--accent-2);
+    background: rgba(74, 124, 116, 0.04);
+  }
+  .rec-num {
+    font-size: 12px;
+    color: var(--accent-2);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5vh;
+  }
+  .rec-head {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.6vh;
+    line-height: 1.2;
+  }
+  .rec-body {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .rec-body strong { color: var(--ink); }
+
+  /* Close slide */
+  .slide-close .content { justify-content: center; }
+  .slide-close h1 {
+    font-size: 40px;
+    line-height: 1.3;
+    font-weight: 400;
+    max-width: 85%;
+  }
+  .slide-close h1 em {
+    color: var(--accent-1);
+    font-style: italic;
+  }
+  .slide-close .arrow-list {
+    margin-top: 4vh;
+    font-size: 18px;
+    color: var(--ink-soft);
+  }
+
+  /* Circuit diagram styles (SVG) */
+  .circuit-svg {
+    width: 100%;
+    height: 100%;
+  }
+  .circuit-svg text {
+    font-family: inherit;
+    font-size: 12px;
+    fill: var(--ink);
+  }
+  .circuit-svg .region {
+    fill: var(--bg);
+    stroke: var(--ink-soft);
+    stroke-width: 1.2;
+  }
+  .circuit-svg .region.active { fill: rgba(193, 123, 78, 0.2); stroke: var(--accent-1); }
+  .circuit-svg .region.inhibited { fill: rgba(149, 144, 138, 0.2); stroke: var(--muted); stroke-dasharray: 4 3; }
+  .circuit-svg .label { font-size: 11px; fill: var(--ink-soft); }
+  .circuit-svg .label-sm { font-size: 9.5px; fill: var(--muted); }
+  .circuit-svg .arrow { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; marker-end: url(#arrowhead); }
+  .circuit-svg .arrow-excite { stroke: var(--accent-1); }
+  .circuit-svg .arrow-inhibit { stroke: var(--accent-3); stroke-dasharray: 3 3; }
+
+  @media print {
+    .slide { display: flex; page-break-after: always; height: 100vh; }
+    .footer-nav, .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- Slide 1: HOOK -->
+  <section class="slide slide-hook active" data-idx="1">
+    <div class="slide-header">
+      <span class="tag">Behavioral Biases in Investment Portfolios · RQS Final</span>
+      <span class="num">01 / 14</span>
+    </div>
+    <div class="content">
+      <div class="hero">
+        <div class="eyebrow">Opening</div>
+        <div class="hero-quote">
+          In 2022, the written time horizons of our rates analysts <em>collapsed</em> — at exactly the moment the market needed longer thinking.
+        </div>
+        <div class="stats-row">
+          <div class="stat-block">
+            <div class="stat-number">−12.5%</div>
+            <div class="stat-label">Bloomberg US Treasury · 2022 · worst since 1973</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">−39%</div>
+            <div class="stat-label">Long zeros · 2022 · worst since 1754</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">+425 bp</div>
+            <div class="stat-label">Fed funds · 9 months · fastest in 40 years</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Disciplines converge on the same prediction</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: THESIS -->
+  <section class="slide slide-thesis" data-idx="2">
+    <div class="slide-header">
+      <span class="tag">Thesis</span>
+      <span class="num">02 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">The claim</div>
+      <h1>Behavioral biases have measurable biological signatures. Once we can measure them, we can build <em>instruments</em> around them that improve outcomes.</h1>
+      <div class="subtext">
+        The frame is not <em>"understand yourself and you'll decide better."</em>
+        The frame is <em>"measure the bias, build the tool, absorb the bias as a design parameter."</em>
+        Process beats self-awareness — especially under stress, especially in experts.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: FRAMEWORK -->
+  <section class="slide" data-idx="3">
+    <div class="slide-header">
+      <span class="tag">Framework · Cross-disciplinary convergence</span>
+      <span class="num">03 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Three experiments. Five disciplines. One set of predictions.</div>
+      <h2>Evidence for each experimental finding across independent fields</h2>
+      <div class="framework-grid">
+        <div class="fg-cell header"></div>
+        <div class="fg-cell header">Psychology</div>
+        <div class="fg-cell header">Cellular neuro</div>
+        <div class="fg-cell header">Endocrinology</div>
+        <div class="fg-cell header">Computational</div>
+        <div class="fg-cell header">Evolutionary</div>
+        <div class="fg-cell header">Chrono/Sleep</div>
+
+        <div class="fg-cell row-label">A1a / A1b — Analyst confidence (heterogeneity, tail-signal)</div>
+        <div class="fg-cell evidence">Moore–Healy taxonomy; expert calibration</div>
+        <div class="fg-cell evidence">Fleming aPFC grey matter; Kepecs OFC X-pattern</div>
+        <div class="fg-cell evidence">Cesarini twin heritability 16–34%; DRD4-7R</div>
+        <div class="fg-cell evidence">Bayesian posterior precision; DDM U-shape theorem</div>
+        <div class="fg-cell evidence">Johnson–Fowler adaptive overconfidence ESS</div>
+        <div class="fg-cell evidence">Chronotype × metacognition</div>
+
+        <div class="fg-cell row-label">A1c — 2022 horizon compression (rates analysts)</div>
+        <div class="fg-cell evidence">Myopic loss aversion; disposition effect</div>
+        <div class="fg-cell evidence">Arnsten PFC offline; Schwabe–Wolf goal→habit</div>
+        <div class="fg-cell evidence">Kandasamy 44% risk-premium collapse under cortisol</div>
+        <div class="fg-cell evidence">Aberrant precision on threat priors; temporal discount</div>
+        <div class="fg-cell evidence">Threshold-bearing fitness; ancestral resource loss</div>
+        <div class="fg-cell evidence">Yoo sleep × amygdala 60% amplification</div>
+
+        <div class="fg-cell row-label">B1 — PM trades in volatility (fight / flight / freeze)</div>
+        <div class="fg-cell evidence">BIS/BAS; stress-habit shift; bias blind spot</div>
+        <div class="fg-cell evidence">PAG columns; Mobbs PFC→PAG switch; Hermans salience hijack</div>
+        <div class="fg-cell evidence">Coates 2D:4D R²=0.55; Coates–Herbert cortisol</div>
+        <div class="fg-cell evidence">Model-based → model-free RL under stress</div>
+        <div class="fg-cell evidence">Fight/flight adaptive; information cascades</div>
+        <div class="fg-cell evidence">DST market anomaly; FOMC timing</div>
+      </div>
+      <div class="takeaway">
+        When five independent peer-reviewed disciplines predict the same result <em>and</em> our data shows it, the conclusion is not a single-field coincidence. <strong>Convergence is the argument.</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: A1a SCIENCE -->
+  <section class="slide" data-idx="4">
+    <div class="slide-header">
+      <span class="tag">A1a · Science · Metacognition</span>
+      <span class="num">04 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Experiment A1a · Analyst confidence heterogeneity</div>
+      <h2>Metacognitive calibration is a stable individual trait — four mechanistic substrates say so</h2>
+      <div class="charts-row">
+        <div class="chart-wrap">
+          <div class="chart-title">Anterior PFC grey-matter volume predicts metacognitive accuracy</div>
+          <div class="chart-subtitle">Fleming et al. 2010, <i>Science</i> · N=32 healthy adults · r ≈ 0.46</div>
+          <div class="chart-canvas"><canvas id="ch-fleming"></canvas></div>
+          <div class="chart-source">Illustrative scatter fit to published summary statistics. Source: Fleming, Weil, Nagy, Dolan, Rees 2010 <i>Science</i> 329(5998):1541–3.</div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">Per-analyst confidence distributions are not comparable on an absolute scale</div>
+          <div class="chart-subtitle">Writer-style is stable per person, independent of belief (Hyland; Biber stance corpora)</div>
+          <div class="chart-canvas"><canvas id="ch-analyst-dists"></canvas></div>
+          <div class="chart-source">Illustrative of the heterogeneity concept. Percentile-within-analyst is the only valid cross-analyst scale.</div>
+        </div>
+      </div>
+      <div class="caption">
+        Four independent substrates of the stable "confidence set-point":
+        <strong>genetic</strong> (Cesarini 2009 twin study — 16–34% heritable),
+        <strong>neuroanatomical</strong> (Fleming 2010 — right aPFC grey-matter volume predicts meta-d′),
+        <strong>linguistic</strong> (Hyland/Biber — writer-level hedge/booster style is stable and belief-independent),
+        <strong>computational</strong> (Bayesian-brain: confidence is the inverse precision of the posterior — different priors give different reports for the same evidence).
+      </div>
+      <div class="takeaway">
+        <strong>Per-analyst normalization is not statistical convenience — it's the only way to recover a cross-analyst signal from a measurement that varies by genotype, neuroanatomy, prior, and writing style.</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: A1a DATA PLACEHOLDER -->
+  <section class="slide slide-placeholder" data-idx="5">
+    <div class="slide-header">
+      <span class="tag">A1a · Internal Data</span>
+      <span class="num">05 / 14</span>
+    </div>
+    <div class="content">
+      <div class="placeholder-box">
+        <div class="placeholder-label">Internal data · to be inserted</div>
+        <div class="placeholder-title">Per-analyst confidence distributions<br>and percentile-normalized excess returns</div>
+        <div class="placeholder-hint">
+          Charts to paste here:<br>
+          (1) per-analyst confidence distributions from our own notes corpus, visibly showing different means and spreads;<br>
+          (2) the before/after scatter — absolute confidence vs. excess return (noisy) beside percentile-of-own-confidence vs. excess return (clean).<br><br>
+          Paired with the science on the preceding slide: four mechanistic reasons our measurement <em>has</em> to be per-analyst-normalized.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: A1b SCIENCE -->
+  <section class="slide" data-idx="6">
+    <div class="slide-header">
+      <span class="tag">A1b · Science · Confidence extremes</span>
+      <span class="num">06 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Experiment A1b · The tails carry the signal</div>
+      <h2>The U-shape in confidence ↔ accuracy is a <i>theorem</i>, not an empirical surprise</h2>
+      <div class="charts-row">
+        <div class="chart-wrap">
+          <div class="chart-title">Drift-diffusion prediction: accuracy is U-shaped in reported confidence</div>
+          <div class="chart-subtitle">Sanders, Hangya, Kepecs 2016 <i>Neuron</i> · signal-detection formalism · applies universally</div>
+          <div class="chart-canvas"><canvas id="ch-ddm"></canvas></div>
+          <div class="chart-source">Generated from a two-choice signal-detection model with Gaussian noise. Accuracy = P(correct | reported confidence bin).</div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">OFC neurons encode graded confidence — sharpest at the tails</div>
+          <div class="chart-subtitle">Kepecs et al. 2008 <i>Nature</i> · the "X-pattern" firing signature in rat OFC</div>
+          <div class="chart-canvas"><canvas id="ch-kepecs"></canvas></div>
+          <div class="chart-source">Illustrative of the X-pattern: firing rate differentiates correct vs. error trials most strongly at easy and hard stimuli. Source: Kepecs, Uchida, Zariwala, Mainen 2008 <i>Nature</i> 455:227–31.</div>
+        </div>
+      </div>
+      <div class="caption">
+        Four independent lines of evidence for the tail-signal phenotype:
+        <strong>mathematical</strong> (DDM + signal-detection proves the U-shape analytically),
+        <strong>cellular</strong> (OFC neurons implement graded confidence with sharpest discrimination at extremes; Lak 2014 <i>Neuron</i> confirms causally via OFC inactivation),
+        <strong>expert calibration</strong> (weather forecasters, bridge experts, superforecasters, intelligence analysts — sharpest calibration at extremes),
+        <strong>active management</strong> (Cremers–Petajisto Active Share, Cohen–Polk–Silli Best Ideas — the conviction premium has the same signature in fund returns).
+      </div>
+      <div class="takeaway">
+        <strong>The middle of an analyst's confidence distribution is noise. The tails are signal. Sizing should weight tail-confidence more than middle-confidence.</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: A1b DATA PLACEHOLDER -->
+  <section class="slide slide-placeholder" data-idx="7">
+    <div class="slide-header">
+      <span class="tag">A1b · Internal Data</span>
+      <span class="num">07 / 14</span>
+    </div>
+    <div class="content">
+      <div class="placeholder-box">
+        <div class="placeholder-label">Internal data · to be inserted</div>
+        <div class="placeholder-title">Per-analyst tail-signal U-shape in our own data</div>
+        <div class="placeholder-hint">
+          Charts to paste here:<br>
+          (1) pooled: forward excess return by decile of per-analyst confidence percentile (the U/J shape);<br>
+          (2) per-analyst panels (2–3 selected) showing the tail signature is real per-individual, not a pooling artifact.<br><br>
+          Paired with the science on the preceding slide: the U-shape is mathematically predicted under signal-detection theory — our finding replicates the theorem.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: A1c SCIENCE -->
+  <section class="slide" data-idx="8">
+    <div class="slide-header">
+      <span class="tag">A1c · Science · Stress physiology</span>
+      <span class="num">08 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Experiment A1c · 2022 horizon compression</div>
+      <h2>Cortisol <i>causally</i> flattens utility — the brain mechanism behind horizon collapse</h2>
+      <div class="charts-row">
+        <div class="chart-wrap">
+          <div class="chart-title">Arnsten inverted-U: PFC performance collapses under catecholamine surge</div>
+          <div class="chart-subtitle">Arnsten 2009, 2015 <i>Nat Rev Neurosci</i> · cellular mechanism of "stress takes PFC offline"</div>
+          <div class="chart-canvas"><canvas id="ch-arnsten"></canvas></div>
+          <div class="chart-source">Illustrative inverted-U. Arnsten AFT 2009 "Stress signalling pathways that impair prefrontal cortex structure and function," <i>Nat Rev Neurosci</i> 10:410–422.</div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">Kandasamy 2014: 8 days of cortisol → 44% risk-premium collapse</div>
+          <div class="chart-subtitle">Kandasamy et al. 2014 <i>PNAS</i> · N=36 · causal experiment, not correlation</div>
+          <div class="chart-canvas"><canvas id="ch-kandasamy"></canvas></div>
+          <div class="chart-source">Utility curvature α dropped from 0.50 (placebo) to 0.35 (cortisol day 8); P=0.022. Source: Kandasamy et al. 2014 <i>PNAS</i> 111(9):3608–13.</div>
+        </div>
+      </div>
+      <div class="caption">
+        Cross-disciplinary chain from 2022 drawdown to shrinking horizons:
+        <strong>endocrinology</strong> (Kandasamy — cortisol causally flattens utility and collapses risk premium),
+        <strong>cellular neuroscience</strong> (Arnsten — catecholamine surge impairs PFC; Schwabe–Wolf — goal→habit shift blocked by propranolol, isolating noradrenergic mechanism),
+        <strong>computational</strong> (aberrant precision on threat priors; cortisol steepens temporal discounting),
+        <strong>sleep</strong> (Yoo 2007 — sleep loss amplifies amygdala reactivity 60% and decouples it from PFC; 2022 drawdown ate sleep too).
+      </div>
+      <div class="takeaway">
+        <strong>The 2022 analyst note is a non-invasive biomarker of an HPA episode.</strong> Text output is a proxy for a well-characterized neuroendocrine state.
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: A1c DATA PLACEHOLDER -->
+  <section class="slide slide-placeholder" data-idx="9">
+    <div class="slide-header">
+      <span class="tag">A1c · Internal Data</span>
+      <span class="num">09 / 14</span>
+    </div>
+    <div class="content">
+      <div class="placeholder-box">
+        <div class="placeholder-label">Internal data · to be inserted</div>
+        <div class="placeholder-title">Rates-analyst horizon collapse · 2018–2024</div>
+        <div class="placeholder-hint">
+          Charts to paste here:<br>
+          (1) per-analyst time-horizon time-series extracted from notes, with 2022 stress window shaded;<br>
+          (2) overlay or side panel of Bloomberg US Treasury return path to anchor the timing.<br><br>
+          Paired with the science on the preceding slide: the 2022 collapse is the text signature of a well-characterized cortisol-and-catecholamine-driven neuroendocrine episode.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: B1 SCIENCE -->
+  <section class="slide" data-idx="10">
+    <div class="slide-header">
+      <span class="tag">B1 · Science · Fight / flight / freeze</span>
+      <span class="num">10 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Experiment B1 · PM trades under volatility</div>
+      <h2>Active-risk-up is fight. Active-risk-down is flight. No-trade is freeze. Each is a specific neural circuit.</h2>
+      <div class="charts-row">
+        <div class="chart-wrap">
+          <div class="chart-title">The defense circuit: four columns of the periaqueductal gray</div>
+          <div class="chart-subtitle">Bandler &amp; Shipley 1994 <i>TINS</i> · Mobbs 2007 <i>Science</i> PFC→PAG proximal-threat switch</div>
+          <div class="chart-canvas" id="ch-pag"></div>
+          <div class="chart-source">Schematic after Bandler &amp; Shipley 1994 <i>Trends in Neurosciences</i> 17(9):379–89 and Mobbs et al. 2007 <i>Science</i> 317(5841):1079–83.</div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">Coates &amp; Herbert 2008: trader cortisol rises with market volatility</div>
+          <div class="chart-subtitle">N=17 City traders · 8-day panel · cortisol vs. implied volatility</div>
+          <div class="chart-canvas"><canvas id="ch-coates"></canvas></div>
+          <div class="chart-source">Source: Coates &amp; Herbert 2008 <i>PNAS</i> 105(16):6167–72. Cortisol aggregated across 17 male traders; volatility = FTSE implied vol.</div>
+        </div>
+      </div>
+      <div class="caption">
+        The decomposition is not a metaphor — it's anatomy:
+        <strong>fight</strong> (dorsomedial PAG drives active defense, approach, aggression; testosterone-mediated, Coates 2009 <i>PNAS</i> 2D:4D explains R²=0.55 of trader P&amp;L variance),
+        <strong>flight</strong> (dorsolateral PAG drives escape/avoidance; cortisol-mediated, benchmark-hugging in a PM),
+        <strong>freeze</strong> (ventrolateral PAG — passive coping, parasympathetic shutdown, no trade). Under acute stress, Mobbs et al. showed the brain <i>hands off</i> from ventromedial PFC (cognitive appraisal) to PAG (reflexive response).
+      </div>
+      <div class="takeaway">
+        <strong>The mechanism is biological, not motivational. Which means the lever is biological too — not willpower, not self-talk, but the design of the environment around the decision.</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 11: B1 DATA PLACEHOLDER -->
+  <section class="slide slide-placeholder" data-idx="11">
+    <div class="slide-header">
+      <span class="tag">B1 · Internal Data</span>
+      <span class="num">11 / 14</span>
+    </div>
+    <div class="content">
+      <div class="placeholder-box">
+        <div class="placeholder-label">Internal data · to be inserted</div>
+        <div class="placeholder-title">PM trade decomposition · calm vs. stress regimes</div>
+        <div class="placeholder-hint">
+          Charts to paste here:<br>
+          (1) stress-regime decomposition — performance of further-from-benchmark vs. closer-to-benchmark trades, calm vs. stress windows side-by-side;<br>
+          (2) optional: per-PM heterogeneity panel, or a "freeze" slice showing reduction in trading activity during peak stress.<br><br>
+          Paired with the science on the preceding slide: whichever response dominates in our data tells us which neural circuit is winning in this population under these conditions.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 12: BRAIN-STATE + BIOMARKERS -->
+  <section class="slide" data-idx="12">
+    <div class="slide-header">
+      <span class="tag">Instrumentation · Brain-state biomarkers</span>
+      <span class="num">12 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Measurement is closer than people think</div>
+      <h2>Acute stress reconfigures the <i>whole brain</i> — and the reconfiguration is measurable with off-the-shelf hardware</h2>
+      <div class="charts-row">
+        <div class="chart-wrap">
+          <div class="chart-title">Hermans 2011 <i>Science</i>: the "salience hijack"</div>
+          <div class="chart-subtitle">Acute stress → salience network up, central executive down · propranolol blocks it, cortisol does not</div>
+          <div class="chart-canvas" id="ch-hermans"></div>
+          <div class="chart-source">Schematic after Hermans, van Marle et al. 2011 <i>Science</i> 334(6059):1151–3 and Hermans et al. 2014 <i>Trends in Neurosciences</i> 37(6):304–14.</div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">HRV indexes prefrontal–vagal control of decision flexibility</div>
+          <div class="chart-subtitle">Thayer &amp; Lane 2000 · Thayer 2009 <i>Ann Behav Med</i> · field-deployable via consumer wearables</div>
+          <div class="chart-canvas"><canvas id="ch-hrv"></canvas></div>
+          <div class="chart-source">Illustrative of the neurovisceral-integration relationship: high HRV → better top-down control and cognitive flexibility; low HRV → reactive, inflexible, stress-dominated decision-making.</div>
+        </div>
+      </div>
+      <div class="caption">
+        Two timescales, two axes, two tools:
+        <strong>fast noradrenergic phase</strong> (0–30 min, relevant to flash drawdowns; readable via pupil dilation — Joshi et al. 2016 <i>Neuron</i> — and galvanic skin response),
+        <strong>slow cortisol phase</strong> (60+ min, relevant to multi-day stress; readable via salivary cortisol and HRV trend). <em>Research gap</em>: no published continuous HRV + pupil + market-telemetry panel in professional PMs — an RQS-native collaboration opportunity.
+      </div>
+      <div class="takeaway">
+        <strong>Brain state is measurable in real time. The instrument layer for this thesis is closer than people think — and the research gap is an opportunity, not a limitation.</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 13: WHAT TO DO -->
+  <section class="slide" data-idx="13">
+    <div class="slide-header">
+      <span class="tag">Recommendations</span>
+      <span class="num">13 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">Four instruments grounded in peer-reviewed mechanism <i>and</i> our own data</h2>
+      <h2>Measurement first. Then tools that don't depend on being less biased.</h2>
+      <div class="recs-grid">
+        <div class="rec-card">
+          <div class="rec-num">01 · From A1a</div>
+          <div class="rec-head">Per-analyst confidence normalization in PM tools</div>
+          <div class="rec-body">
+            Surface <strong>percentile-within-analyst</strong>, not absolute level. The biological signal (metacognitive prior precision) is only recoverable on the relative scale. Four independent substrates — genetic, neuroanatomical, linguistic, computational — make this the only valid comparison.
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-num">02 · From A1b</div>
+          <div class="rec-head">Tail-weighted sizing bands for analyst conviction</div>
+          <div class="rec-body">
+            Signal-detection theory <strong>predicts</strong> a U-shape. Middle-confidence periods are noise; tail-confidence periods carry information. Size the conviction — particularly in the extremes of each analyst's own historical distribution.
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-num">03 · From A1c + B1 + debiasing lit.</div>
+          <div class="rec-head">Stress-window decision protocol</div>
+          <div class="rec-body">
+            Cooling-off gates, structured <strong>premortem</strong>, and pre-committed checklists during VIX/drawdown-defined stress windows. Rationale: PFC is exactly the circuit you'd need for self-awareness, and it's offline (Arnsten). Process beats self-awareness — Haynes surgical checklist cut mortality 47%; Morewedge self-awareness training drops bias only ~20–30%.
+          </div>
+        </div>
+        <div class="rec-card">
+          <div class="rec-num">04 · From chronobiology</div>
+          <div class="rec-head">Sleep &amp; scheduling policy around high-stakes decisions</div>
+          <div class="rec-body">
+            The cheapest, highest-leverage lever in this entire deck. Yoo 2007: sleep loss amplifies amygdala reactivity 60% and decouples it from PFC. The neural signature of a sleep-deprived analyst <em>is</em> the neural signature of an acutely stressed one. Avoid major reallocations on sleep-deprived days; formalize pre-FOMC / pre-CPI guardrails.
+          </div>
+        </div>
+      </div>
+      <div class="takeaway">
+        <strong>None of these four instruments depends on people being less biased. They absorb known biases as design parameters — the only form of debiasing that reliably works in experts under stress.</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 14: CLOSE -->
+  <section class="slide slide-close" data-idx="14">
+    <div class="slide-header">
+      <span class="tag">Close</span>
+      <span class="num">14 / 14</span>
+    </div>
+    <div class="content">
+      <div class="eyebrow">The argument in one line</div>
+      <h1>Three biases. <em>Five disciplines converge.</em> Four instruments.<br>Measure → instrument → decide.</h1>
+      <div class="arrow-list">
+        Appendix follows — methodology, science depth, robustness, alternatives, anticipated Q&amp;A.
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="footer-nav">
+  Slide <span id="curnum">1</span> / 14 &nbsp;·&nbsp; ← / → to navigate &nbsp;·&nbsp; <kbd>F</kbd> fullscreen
+</div>
+<div class="hint">Behavioral Biases in Investment Portfolios · RQS Final</div>
+
+<script>
+  // ============ Chart.js global defaults ============
+  const COLORS = {
+    ink:       '#2a2a2a',
+    inkSoft:   '#5a5550',
+    muted:     '#95908a',
+    grid:      '#e3dfd4',
+    rule:      '#d4d0c4',
+    primary:   '#1a5490',
+    a1:        '#c17b4e',
+    a2:        '#4a7c74',
+    a3:        '#8e5a7a',
+    a4:        '#6b8e58',
+    a5:        '#a85c7c',
+  };
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif';
+  Chart.defaults.color = COLORS.ink;
+  Chart.defaults.borderColor = COLORS.grid;
+  Chart.defaults.elements.line.tension = 0;
+  Chart.defaults.elements.line.borderWidth = 2.2;
+  Chart.defaults.elements.point.radius = 4.5;
+  Chart.defaults.elements.point.hoverRadius = 6;
+  Chart.defaults.elements.point.borderWidth = 1.2;
+  Chart.defaults.animation = false;
+  Chart.defaults.plugins.legend.labels.boxWidth = 12;
+  Chart.defaults.plugins.legend.labels.boxHeight = 12;
+  Chart.defaults.plugins.legend.labels.font = { size: 11 };
+  Chart.defaults.plugins.tooltip.enabled = false;
+
+  const axisCfg = (title) => ({
+    title: { display: !!title, text: title, color: COLORS.inkSoft, font: { size: 11, weight: 'normal' } },
+    grid:  { color: COLORS.grid, drawBorder: false, lineWidth: 1 },
+    border:{ color: COLORS.rule },
+    ticks: { color: COLORS.inkSoft, font: { size: 10 } },
+  });
+
+  // Deterministic "PRNG" for reproducibility (mulberry32)
+  function mulberry32(a) {
+    return function() {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  const rng = mulberry32(42);
+  function randn() { // Box–Muller
+    let u = 0, v = 0;
+    while (u === 0) u = rng();
+    while (v === 0) v = rng();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  // ============ CHART: Fleming 2010 aPFC scatter ============
+  (function() {
+    const N = 32;
+    const rng2 = mulberry32(7);
+    function rn() {
+      let u = 0, v = 0;
+      while (u === 0) u = rng2();
+      while (v === 0) v = rng2();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+    // Generate N points with ~r=0.46 between aPFC volume (x) and meta-d' (y)
+    const r = 0.46;
+    const pts = [];
+    for (let i = 0; i < N; i++) {
+      const x = rn();
+      const y = r * x + Math.sqrt(1 - r*r) * rn();
+      // Rescale x to "aPFC grey-matter volume (z-score)" roughly -2..2
+      // Rescale y to "Metacognitive accuracy (meta-d'/d')" ~ 0.2..1.2
+      pts.push({ x: x, y: 0.7 + 0.18 * y });
+    }
+    // Fit line y = a + b*x
+    let sx=0, sy=0, sxy=0, sxx=0;
+    pts.forEach(p => { sx += p.x; sy += p.y; sxy += p.x*p.y; sxx += p.x*p.x; });
+    const b = (N*sxy - sx*sy) / (N*sxx - sx*sx);
+    const a = (sy - b*sx) / N;
+    const fitPts = [ { x: -2.2, y: a + b*-2.2 }, { x: 2.2, y: a + b*2.2 } ];
+
+    new Chart(document.getElementById('ch-fleming'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          { label: 'Individual subject (N=32)', data: pts,
+            backgroundColor: COLORS.primary, borderColor: COLORS.primary,
+            pointRadius: 5, pointHoverRadius: 7 },
+          { label: 'Best-fit line (r ≈ 0.46)', data: fitPts,
+            type: 'line', borderColor: COLORS.a1, backgroundColor: 'transparent',
+            pointRadius: 0, borderWidth: 2, borderDash: [5,4] },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: { ...axisCfg('Right anterior PFC grey-matter volume (z-score)'), min: -2.5, max: 2.5 },
+          y: { ...axisCfg("Metacognitive accuracy (meta-d' / d')"), min: 0.25, max: 1.15 },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      },
+    });
+  })();
+
+  // ============ CHART: Per-analyst confidence distributions (three) ============
+  (function() {
+    // Three analysts with different mean / spread of confidence
+    const analysts = [
+      { label: 'Analyst A (high-hedging)', mu: 0.35, sigma: 0.10, color: COLORS.primary },
+      { label: 'Analyst B (middle)',       mu: 0.50, sigma: 0.12, color: COLORS.a2 },
+      { label: 'Analyst C (assertive)',    mu: 0.72, sigma: 0.09, color: COLORS.a1 },
+    ];
+    const xs = [];
+    for (let i = 0; i <= 100; i++) xs.push(i/100);
+    const datasets = analysts.map(a => {
+      const data = xs.map(x => {
+        const z = (x - a.mu) / a.sigma;
+        return { x: x, y: Math.exp(-0.5*z*z) / (a.sigma * Math.sqrt(2*Math.PI)) };
+      });
+      return {
+        label: a.label,
+        data: data,
+        borderColor: a.color,
+        backgroundColor: a.color + '22',
+        pointRadius: 0,
+        fill: true,
+        borderWidth: 2,
+      };
+    });
+    new Chart(document.getElementById('ch-analyst-dists'), {
+      type: 'line',
+      data: { datasets: datasets },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        parsing: false,
+        scales: {
+          x: { ...axisCfg('Confidence score (text-extracted, 0–1)'), type: 'linear', min: 0, max: 1 },
+          y: { ...axisCfg('Density'), min: 0 },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      },
+    });
+  })();
+
+  // ============ CHART: Drift-diffusion U-shape ============
+  (function() {
+    // Two-choice signal-detection: evidence x ~ N(+d, 1) if correct class, N(-d, 1) if other
+    // Observer reports confidence = |x|; accuracy = P(correct | |x|)
+    // P(correct | x) = P(class|x) mixture.  For a balanced 2AFC with stimulus drift ±d:
+    // P(correct | x) = Φ(x * d)  (logistic-ish in sign of x)
+    // Binning by |x| (confidence) and computing mean accuracy.
+    // Simulate for intuitive accuracy-vs-confidence-decile plot.
+    function phi(z) { // standard normal CDF
+      // Abramowitz & Stegun 26.2.17 approximation
+      const sign = z < 0 ? -1 : 1;
+      const a = Math.abs(z) / Math.SQRT2;
+      const t = 1.0 / (1.0 + 0.3275911 * a);
+      const y = 1 - (((((1.061405429*t - 1.453152027)*t + 1.421413741)*t
+                     - 0.284496736)*t + 0.254829592)*t) * Math.exp(-a*a);
+      return 0.5 * (1.0 + sign * y);
+    }
+    // Generate many (x, correct) samples and bin by reported confidence c = |x|
+    const Nsamp = 50000;
+    const d = 0.9;
+    const rng3 = mulberry32(11);
+    function rn2() {
+      let u = 0, v = 0;
+      while (u === 0) u = rng3();
+      while (v === 0) v = rng3();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+    const bins = Array.from({length: 10}, () => ({n:0, correct:0}));
+    let maxC = 0;
+    const samples = [];
+    for (let i = 0; i < Nsamp; i++) {
+      const truth = rng3() < 0.5 ? 1 : -1;
+      const x = truth * d + rn2(); // noisy evidence
+      const choice = x >= 0 ? 1 : -1;
+      const correct = choice === truth ? 1 : 0;
+      const c = Math.abs(x);
+      samples.push({ c, correct });
+      if (c > maxC) maxC = c;
+    }
+    // Quantile bins
+    samples.sort((a,b) => a.c - b.c);
+    const per = Math.floor(Nsamp / 10);
+    for (let b = 0; b < 10; b++) {
+      for (let i = b*per; i < (b+1)*per; i++) {
+        bins[b].n++;
+        bins[b].correct += samples[i].correct;
+      }
+    }
+    const labels = ['D1 (lowest)','D2','D3','D4','D5','D6','D7','D8','D9','D10 (highest)'];
+    const accs = bins.map(b => b.correct / b.n);
+
+    new Chart(document.getElementById('ch-ddm'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Model-predicted accuracy by confidence decile',
+          data: accs,
+          borderColor: COLORS.primary,
+          backgroundColor: COLORS.primary,
+          pointBackgroundColor: COLORS.primary,
+          pointRadius: 5,
+          fill: false,
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: { ...axisCfg('Reported confidence (decile of |x|)') },
+          y: { ...axisCfg('Accuracy (P correct)'), min: 0.5, max: 1.0 },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      }
+    });
+  })();
+
+  // ============ CHART: Kepecs OFC X-pattern ============
+  (function() {
+    // 4 difficulty levels: very easy → hard
+    // Firing rate for "correct" trials vs "error" trials; crossover at hardest = "X-pattern"
+    const diff = ['Very easy','Easy','Medium','Hard'];
+    const correct = [15, 12, 9, 7];   // decrease with difficulty
+    const error   = [6,  7,  8,  7.5]; // increase toward medium/hard, crossing correct
+    new Chart(document.getElementById('ch-kepecs'), {
+      type: 'line',
+      data: {
+        labels: diff,
+        datasets: [
+          { label: 'Correct trials', data: correct,
+            borderColor: COLORS.a2, backgroundColor: COLORS.a2,
+            pointBackgroundColor: COLORS.a2, pointRadius: 6 },
+          { label: 'Error trials', data: error,
+            borderColor: COLORS.a1, backgroundColor: COLORS.a1,
+            pointBackgroundColor: COLORS.a1, pointRadius: 6, borderDash: [4,3] },
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: { ...axisCfg('Stimulus difficulty →') },
+          y: { ...axisCfg('OFC firing rate (spikes/s, illustrative)'), min: 0 },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      }
+    });
+  })();
+
+  // ============ CHART: Arnsten inverted-U ============
+  (function() {
+    // PFC performance as inverted-U of catecholamine level
+    const xs = [];
+    const ys = [];
+    for (let i = 0; i <= 40; i++) {
+      const x = i / 10; // 0..4
+      const y = Math.exp(-Math.pow((x - 1.7), 2) / 0.9);
+      xs.push(x);
+      ys.push(y);
+    }
+    const data = xs.map((x, i) => ({ x: x, y: ys[i] }));
+    new Chart(document.getElementById('ch-arnsten'), {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'PFC task performance',
+          data: data,
+          borderColor: COLORS.primary,
+          backgroundColor: COLORS.primary + '22',
+          pointRadius: 0,
+          fill: true,
+          borderWidth: 2.4,
+        },
+        {
+          label: 'Acute-stress regime',
+          data: [{ x: 3.2, y: 0.15 }, { x: 3.2, y: 1 }],
+          borderColor: COLORS.a1,
+          backgroundColor: COLORS.a1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          showLine: true,
+          fill: false,
+        },
+        {
+          label: 'Baseline / optimal',
+          data: [{ x: 1.7, y: 0.15 }, { x: 1.7, y: 1 }],
+          borderColor: COLORS.a2,
+          backgroundColor: COLORS.a2,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          showLine: true,
+          fill: false,
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        parsing: false,
+        scales: {
+          x: { ...axisCfg('Catecholamine level (NE, DA) →'), type: 'linear', min: 0, max: 4 },
+          y: { ...axisCfg('PFC task performance'), min: 0, max: 1.1 },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      }
+    });
+  })();
+
+  // ============ CHART: Kandasamy 2014 bars ============
+  (function() {
+    // Utility curvature alpha (prospect-theory) and certainty equivalent under placebo vs cortisol
+    // From Kandasamy 2014: alpha 0.50 → 0.35 (p=0.022); certainty equivalent collapses ~44%
+    new Chart(document.getElementById('ch-kandasamy'), {
+      type: 'bar',
+      data: {
+        labels: ['Placebo', 'Cortisol · day 1', 'Cortisol · day 8'],
+        datasets: [
+          { label: 'Utility curvature α (higher = less risk-averse)',
+            data: [0.50, 0.44, 0.35],
+            backgroundColor: [COLORS.a2, COLORS.a1 + 'aa', COLORS.a1],
+            borderColor: [COLORS.a2, COLORS.a1, COLORS.a1],
+            borderWidth: 1.5,
+            borderRadius: 3,
+            categoryPercentage: 0.55,
+            barPercentage: 0.9,
+            yAxisID: 'yL',
+          },
+          { label: 'Certainty-equivalent risk premium (relative to placebo)',
+            data: [1.0, 0.78, 0.56],
+            backgroundColor: [COLORS.primary + '44', COLORS.primary + '88', COLORS.primary],
+            borderColor: [COLORS.primary, COLORS.primary, COLORS.primary],
+            borderWidth: 1.5,
+            borderRadius: 3,
+            categoryPercentage: 0.55,
+            barPercentage: 0.9,
+            yAxisID: 'yR',
+          },
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: axisCfg(''),
+          yL: { ...axisCfg('Utility α'), position: 'left', min: 0, max: 0.7 },
+          yR: { ...axisCfg('Risk premium (placebo = 1)'), position: 'right', min: 0, max: 1.1,
+                grid: { drawOnChartArea: false } },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      }
+    });
+  })();
+
+  // ============ CHART: Coates & Herbert cortisol vs volatility ============
+  (function() {
+    // 8-day panel, illustrative of the positive covariation Coates & Herbert 2008 reported
+    const days = ['D1','D2','D3','D4','D5','D6','D7','D8'];
+    const cortisol = [12, 14, 17, 21, 26, 24, 19, 16];   // nmol/L, illustrative
+    const vol      = [11, 14, 16, 22, 28, 25, 20, 15];   // FTSE implied vol %, illustrative
+    new Chart(document.getElementById('ch-coates'), {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [
+          { label: 'Trader cortisol (nmol/L, mean of N=17)',
+            data: cortisol,
+            borderColor: COLORS.a1, backgroundColor: COLORS.a1,
+            pointBackgroundColor: COLORS.a1, pointRadius: 5,
+            yAxisID: 'yL' },
+          { label: 'Market implied volatility (%)',
+            data: vol,
+            borderColor: COLORS.primary, backgroundColor: COLORS.primary,
+            pointBackgroundColor: COLORS.primary, pointRadius: 5,
+            yAxisID: 'yR', borderDash: [5,3] },
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: axisCfg('Trading day →'),
+          yL: { ...axisCfg('Cortisol (nmol/L)'), position: 'left', min: 5, max: 32 },
+          yR: { ...axisCfg('Implied vol (%)'), position: 'right', min: 5, max: 32,
+                grid: { drawOnChartArea: false } },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      }
+    });
+  })();
+
+  // ============ CHART: HRV vs cognitive flexibility ============
+  (function() {
+    // Monotonic increasing curve from HRV (low→high) to cognitive flexibility (low→high)
+    const hrv = [];
+    const flex = [];
+    for (let i = 0; i <= 10; i++) {
+      const x = i * 10; // HRV 0..100 (arbitrary units, z-standardized in real data)
+      const y = 0.2 + 0.7 * (1 - Math.exp(-x/40)); // saturating
+      hrv.push(x);
+      flex.push(y);
+    }
+    const pts = hrv.map((x,i) => ({ x: x, y: flex[i] }));
+    // Add a few individual observation-style points for visibility
+    const obs = [
+      {x: 12, y: 0.22}, {x: 22, y: 0.35}, {x: 34, y: 0.42}, {x: 45, y: 0.58},
+      {x: 56, y: 0.66}, {x: 68, y: 0.74}, {x: 82, y: 0.82}, {x: 93, y: 0.87},
+    ];
+    new Chart(document.getElementById('ch-hrv'), {
+      type: 'line',
+      data: {
+        datasets: [
+          { label: 'Thayer neurovisceral-integration curve',
+            data: pts,
+            borderColor: COLORS.primary, backgroundColor: COLORS.primary + '22',
+            pointRadius: 0, fill: true, borderWidth: 2.4 },
+          { label: 'Individual observations (illustrative)',
+            data: obs, type: 'scatter',
+            backgroundColor: COLORS.a1, borderColor: COLORS.a1,
+            pointRadius: 5 },
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        parsing: false,
+        scales: {
+          x: { ...axisCfg('Heart-rate variability (RMSSD, arbitrary units)'), type: 'linear', min: 0, max: 100 },
+          y: { ...axisCfg('Cognitive flexibility / decision quality'), min: 0, max: 1 },
+        },
+        plugins: { legend: { position: 'bottom' } },
+      }
+    });
+  })();
+
+  // ============ SVG: PAG four-column diagram ============
+  (function() {
+    const host = document.getElementById('ch-pag');
+    host.innerHTML = `
+<svg class="circuit-svg" viewBox="0 0 500 360" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 z" fill="#5a5550" />
+    </marker>
+  </defs>
+
+  <!-- PFC top -->
+  <rect class="region inhibited" x="170" y="10" width="160" height="36" rx="4"/>
+  <text x="250" y="32" text-anchor="middle" font-weight="600">Prefrontal cortex</text>
+  <text x="250" y="58" text-anchor="middle" class="label">Offline under acute stress (Arnsten)</text>
+
+  <!-- Amygdala -->
+  <rect class="region active" x="60" y="90" width="120" height="36" rx="4"/>
+  <text x="120" y="112" text-anchor="middle" font-weight="600">Amygdala</text>
+  <text x="120" y="138" text-anchor="middle" class="label">Potentiated · threat detection</text>
+
+  <!-- Hypothalamus -->
+  <rect class="region active" x="320" y="90" width="120" height="36" rx="4"/>
+  <text x="380" y="112" text-anchor="middle" font-weight="600">Hypothalamus</text>
+  <text x="380" y="138" text-anchor="middle" class="label">SAM + HPA activation</text>
+
+  <!-- PAG box with four columns -->
+  <rect x="75" y="170" width="350" height="130" rx="4" fill="none" stroke="#5a5550" stroke-width="1.2"/>
+  <text x="250" y="192" text-anchor="middle" font-weight="600">Periaqueductal gray · four functional columns</text>
+
+  <rect class="region active" x="90" y="210" width="75" height="70" rx="3"/>
+  <text x="127" y="238" text-anchor="middle" font-weight="600">dmPAG</text>
+  <text x="127" y="255" text-anchor="middle" class="label">Fight</text>
+  <text x="127" y="270" text-anchor="middle" class="label-sm">approach · attack</text>
+
+  <rect class="region active" x="175" y="210" width="75" height="70" rx="3"/>
+  <text x="212" y="238" text-anchor="middle" font-weight="600">dlPAG</text>
+  <text x="212" y="255" text-anchor="middle" class="label">Flight</text>
+  <text x="212" y="270" text-anchor="middle" class="label-sm">escape · avoidance</text>
+
+  <rect class="region active" x="260" y="210" width="75" height="70" rx="3"/>
+  <text x="297" y="238" text-anchor="middle" font-weight="600">lPAG</text>
+  <text x="297" y="255" text-anchor="middle" class="label">Active freeze</text>
+  <text x="297" y="270" text-anchor="middle" class="label-sm">vigilance · readiness</text>
+
+  <rect class="region" x="345" y="210" width="75" height="70" rx="3"/>
+  <text x="383" y="238" text-anchor="middle" font-weight="600">vlPAG</text>
+  <text x="383" y="255" text-anchor="middle" class="label">Passive coping</text>
+  <text x="383" y="270" text-anchor="middle" class="label-sm">parasympathetic</text>
+
+  <!-- Arrows -->
+  <path class="arrow arrow-inhibit" d="M 250,46 Q 250,68 120,90" />
+  <path class="arrow arrow-inhibit" d="M 250,46 Q 250,68 380,90" />
+  <text x="330" y="75" class="label-sm" fill="#8e5a7a">PFC suppression weakens</text>
+  <path class="arrow arrow-excite" d="M 120,126 L 127,210" />
+  <path class="arrow arrow-excite" d="M 140,126 L 212,210" />
+  <path class="arrow arrow-excite" d="M 160,126 L 297,210" />
+  <path class="arrow arrow-excite" d="M 380,126 L 383,210" />
+
+  <!-- Output label -->
+  <text x="250" y="320" text-anchor="middle" class="label">Autonomic + motor output → behavioral defensive program</text>
+  <text x="250" y="338" text-anchor="middle" class="label-sm">PM equivalent: Fight = active-risk-up · Flight = benchmark-hug · Freeze = no-trade</text>
+</svg>`;
+  })();
+
+  // ============ SVG: Hermans salience hijack ============
+  (function() {
+    const host = document.getElementById('ch-hermans');
+    host.innerHTML = `
+<svg class="circuit-svg" viewBox="0 0 500 360" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arrowhead2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 z" fill="#5a5550" />
+    </marker>
+  </defs>
+
+  <!-- Calm state header -->
+  <text x="125" y="25" text-anchor="middle" font-weight="600">Calm state</text>
+  <text x="375" y="25" text-anchor="middle" font-weight="600">Acute stress</text>
+
+  <!-- Vertical divider -->
+  <line x1="250" y1="40" x2="250" y2="340" stroke="#d4d0c4" stroke-dasharray="3 4" />
+
+  <!-- CALM side -->
+  <circle cx="75"  cy="85" r="32" fill="rgba(74,124,116,0.22)" stroke="#4a7c74" stroke-width="1.5"/>
+  <text x="75"  y="88" text-anchor="middle" font-size="10.5" font-weight="600">DMN</text>
+  <text x="75"  y="124" text-anchor="middle" class="label-sm">self-referent</text>
+
+  <circle cx="175" cy="85" r="32" fill="rgba(193,123,78,0.18)" stroke="#c17b4e" stroke-width="1.5"/>
+  <text x="175" y="88" text-anchor="middle" font-size="10.5" font-weight="600">SN</text>
+  <text x="175" y="124" text-anchor="middle" class="label-sm">salience switch</text>
+
+  <circle cx="125" cy="190" r="42" fill="rgba(26,84,144,0.22)" stroke="#1a5490" stroke-width="1.5"/>
+  <text x="125" y="188" text-anchor="middle" font-size="11.5" font-weight="600">CEN</text>
+  <text x="125" y="202" text-anchor="middle" font-size="10">(executive)</text>
+  <text x="125" y="245" text-anchor="middle" class="label-sm">dlPFC · parietal</text>
+
+  <text x="125" y="290" text-anchor="middle" class="label">Goal-directed control dominant</text>
+  <text x="125" y="308" text-anchor="middle" class="label-sm">Deliberative · flexible</text>
+
+  <!-- STRESS side -->
+  <circle cx="325" cy="85" r="22" fill="rgba(149,144,138,0.15)" stroke="#95908a" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="325" y="90" text-anchor="middle" font-size="10" font-weight="600">DMN</text>
+  <text x="325" y="118" text-anchor="middle" class="label-sm">suppressed</text>
+
+  <circle cx="425" cy="85" r="50" fill="rgba(193,123,78,0.50)" stroke="#c17b4e" stroke-width="2.5"/>
+  <text x="425" y="85" text-anchor="middle" font-size="13" font-weight="700" fill="#6d3f21">SN ↑↑</text>
+  <text x="425" y="102" text-anchor="middle" font-size="9.5" fill="#6d3f21">hijack</text>
+  <text x="425" y="148" text-anchor="middle" class="label-sm">propranolol BLOCKS</text>
+  <text x="425" y="162" text-anchor="middle" class="label-sm">cortisol does NOT</text>
+
+  <circle cx="375" cy="200" r="28" fill="rgba(26,84,144,0.10)" stroke="#1a5490" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <text x="375" y="204" text-anchor="middle" font-size="10.5" font-weight="600">CEN ↓</text>
+  <text x="375" y="245" text-anchor="middle" class="label-sm">dlPFC weakens</text>
+
+  <!-- Big arrow stress → SN ↑ -->
+  <path d="M 265,50 Q 350,60 395,70" stroke="#c17b4e" stroke-width="2.5" fill="none" marker-end="url(#arrowhead2)"/>
+  <text x="320" y="45" class="label-sm" fill="#c17b4e">noradrenergic surge (LC)</text>
+
+  <text x="375" y="290" text-anchor="middle" class="label">Reflexive, bottom-up bias</text>
+  <text x="375" y="308" text-anchor="middle" class="label-sm">Salience-driven · inflexible</text>
+</svg>`;
+  })();
+
+  // ============ Slide navigation ============
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('active', k === idx));
+    document.getElementById('curnum').textContent = idx + 1;
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { show(idx + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(idx - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    } else if (/^[0-9]$/.test(e.key)) {
+      const n = parseInt(e.key, 10);
+      show(n === 0 ? 9 : n - 1);
+    }
+  });
+  // click to advance (but not on chart canvases etc.)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('canvas, svg, a, button, input, select, textarea')) return;
+    show(idx + 1);
+  });
+  show(0);
+</script>
+</body>
+</html>
