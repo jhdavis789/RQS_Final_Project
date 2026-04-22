@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stress &amp; Decision-Making — Science Slides (A · B · C)</title>
+<style>
+  :root {
+    --bg:        #f5f1e8;
+    --ink:       #2a2a2a;
+    --ink-soft:  #5a5550;
+    --rule:      #d4d0c4;
+    --grid:      #e3dfd4;
+    --muted:     #95908a;
+    --primary:   #1a5490;
+    --a1:        #c17b4e;
+    --a2:        #4a7c74;
+    --a3:        #8e5a7a;
+    --a4:        #6b8e58;
+    --warn:      #b8553a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 3.5vh 5vw;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .slide.active { display: flex; }
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.8vh;
+    margin-bottom: 1.8vh;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .slide-header .tag { color: var(--muted); }
+  .slide-header .num { font-variant-numeric: tabular-nums; }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 0.7vh 0;
+    line-height: 1.2;
+    max-width: 96%;
+  }
+  h1 em {
+    color: var(--a1);
+    font-style: italic;
+    font-weight: 600;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0.4vh 0 1.2vh 0;
+    max-width: 96%;
+    line-height: 1.45;
+  }
+  .subtitle strong { color: var(--ink); font-weight: 600; }
+  .subtitle em { color: var(--a1); font-style: italic; }
+  .content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  .figs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5vw;
+    flex: 1;
+    min-height: 0;
+  }
+  .fig-wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 1vh 1vw;
+  }
+  .fig-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.2vh;
+    line-height: 1.3;
+  }
+  .fig-cite {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-bottom: 0.5vh;
+    font-style: italic;
+    line-height: 1.3;
+  }
+  .fig-cite .figref {
+    color: var(--primary);
+    font-style: normal;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .fig-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .fig-body img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .fig-caption {
+    margin-top: 0.5vh;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    text-align: center;
+  }
+  .fig-caption strong { color: var(--ink); }
+
+  .single-fig {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 2.5vw;
+    min-height: 0;
+  }
+  .single-fig .fig-wrap { min-height: 0; }
+
+  .pair-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.3vh;
+    min-height: 0;
+  }
+  .pair-row {
+    flex: 1;
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 1.5vw;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .pair-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.8vh 0.8vw;
+    background: rgba(193, 123, 78, 0.08);
+    border-left: 3px solid var(--a1);
+    max-width: 12vw;
+  }
+  .pair-row.pair-two .pair-label {
+    background: rgba(74, 124, 116, 0.08);
+    border-left-color: var(--a2);
+  }
+  .pair-label .pair-num {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--a1);
+    text-transform: uppercase;
+    margin-bottom: 0.3vh;
+  }
+  .pair-row.pair-two .pair-label .pair-num { color: var(--a2); }
+  .pair-label .pair-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .pair-row .fig-wrap { min-height: 0; }
+  .pair-row .fig-title { font-size: 11.5px; }
+  .pair-row .fig-cite { font-size: 10px; }
+  .pair-row .fig-caption { font-size: 10.5px; }
+
+  .mechanism-box {
+    background: rgba(74, 124, 116, 0.06);
+    border-left: 3px solid var(--a2);
+    padding: 1.4vh 1.4vw;
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+    overflow-y: auto;
+  }
+  .mechanism-box h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--a2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mechanism-box p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .mechanism-box p strong { color: var(--ink); font-weight: 600; }
+  .mechanism-box p em { color: var(--a1); font-style: italic; }
+  .mechanism-box .cite {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-top: 0.3vh;
+  }
+  .mechanism-box .cite a { color: var(--primary); text-decoration: none; border-bottom: 1px dotted var(--primary); }
+
+  .footnote {
+    margin-top: 1.2vh;
+    padding-top: 0.9vh;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .footnote strong { color: var(--ink); font-weight: 600; }
+  .footnote em { color: var(--a1); font-style: italic; }
+  .footnote .source {
+    margin-top: 0.5vh;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .footnote .source a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--primary);
+  }
+
+  .kahneman-pull {
+    margin: 0.5vh 0 0.9vh 0;
+    padding: 0.7vh 1.2vw;
+    background: rgba(26, 84, 144, 0.05);
+    border-left: 3px solid var(--primary);
+    font-size: 12.5px;
+    color: var(--ink);
+    font-style: italic;
+    line-height: 1.45;
+  }
+  .kahneman-pull strong { font-style: normal; color: var(--primary); font-weight: 600; }
+
+  .footer-nav {
+    position: fixed;
+    bottom: 1vh; right: 2vw;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    background: rgba(245, 241, 232, 0.92);
+    padding: 0.4vh 1vw;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: transparent;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--a1);
+    transition: width 0.2s ease;
+  }
+  .hint {
+    position: fixed;
+    bottom: 1vh; left: 2vw;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media print {
+    html, body { overflow: visible; height: auto; }
+    .deck { height: auto; overflow: visible; }
+    .slide { display: flex !important; position: relative !important; page-break-after: always; height: 100vh; width: 100vw; }
+    .footer-nav, .hint, .progress-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ==== SLIDE A: STRESS RESPONSE — ACUTE + EXTENDED ==== -->
+  <section class="slide active" data-idx="1">
+    <div class="slide-header">
+      <span class="tag">Science · Stress response · Immediate + extended</span>
+      <span class="num">01 / 05</span>
+    </div>
+    <div class="content">
+      <h1>The brain under stress — <em>immediately</em>, and for as long as the stressor lasts.</h1>
+      <div class="subtitle">
+        Two phases, two timescales. <strong>Acute</strong> stress floods the PFC with catecholamines (Arnsten 2009) and reconfigures whole-brain networks via noradrenaline from the locus coeruleus within seconds (Hermans 2011 <i>Science</i>). <strong>Extended</strong> stress — the weeks of sustained elevation that characterize a multi-month drawdown — retracts PFC dendrites in rodents at 3 weeks (Radley 2004: −20% apical length), and measurably degrades attention, working memory, and DLPFC connectivity in humans (Liston 2009). The central, counter-intuitive point: <strong>the subjective sense of stress habituates after a few exposures. The biological impact does not.</strong>
+      </div>
+      <div class="single-fig">
+        <div class="fig-wrap">
+          <div class="fig-title">Medical residents: 4 weeks of sustained exam stress disrupts DLPFC connectivity AND attention-shifting; 4 weeks after stress ends, both recover fully.</div>
+          <div class="fig-cite"><span class="figref">Liston, McEwen &amp; Casey 2009, <i>PNAS</i> 106(3):912–917 · Figure 3</span> · N=20 stressed residents + 20 low-stress controls; <a href="https://www.pnas.org/doi/10.1073/pnas.0807041106" target="_blank">pnas.org/doi/10.1073/pnas.0807041106</a></div>
+          <div class="fig-body">
+            <img src="figures/liston_2009_fig3.jpg" alt="Liston 2009 Figure 3 — chronic stress reversibly disrupted DLPFC functional connectivity" />
+          </div>
+          <div class="fig-caption"><strong>A.</strong> Brain regions of reduced DLPFC connectivity in stressed residents. <strong>Bi.</strong> Perceived Stress Score: elevated in Session 1 (p&lt;0.001), normalized by Session 2 (NS). <strong>Bii.</strong> Attention-shift cost (ms): elevated in Session 1 (p&lt;0.01), normalized by Session 2 (NS). <strong>C.</strong> Functional connectivity from left &amp; right DLPFC: reduced in Session 1, restored in Session 2.</div>
+        </div>
+        <div class="mechanism-box">
+          <h3>What the biology does while you stop feeling it</h3>
+          <p><strong>Subjective habituation.</strong> Kirschbaum 1995 (<i>Psychosom Med</i> 57:468): across 5 daily Trier stress sessions, <em>~65% of healthy adults habituate</em> — their cortisol and their subjective stress ratings decline. But that is only half the story.</p>
+          <p><strong>Biological dissociation.</strong> Schommer, Hellhammer &amp; Kirschbaum 2003 (<i>Psychosom Med</i> 65:450, N=65, 3 TSST sessions 4 weeks apart): <em>salivary cortisol, plasma cortisol, ACTH and heart rate all decrease significantly across sessions</em> (F&gt;5.8, p&lt;0.01). <em>Norepinephrine and epinephrine do not</em>. The HPA axis habituates; the sympathetic nervous system keeps firing at full strength every single time.</p>
+          <p><strong>Mechanism (rodent).</strong> Radley et al. 2004 (<i>Neuroscience</i> 125:1): 21 days of restraint stress → −20% apical dendritic length and −17% branch number in mPFC pyramidal neurons. Radley 2005 (<i>Exp Neurol</i> 196:199): the atrophy reverses after 3 weeks of recovery.</p>
+          <div class="cite">Open-access links: <a href="https://pubmed.ncbi.nlm.nih.gov/12764219/" target="_blank">Schommer 2003 PubMed</a> · <a href="https://pubmed.ncbi.nlm.nih.gov/8552738/" target="_blank">Kirschbaum 1995 PubMed</a> · <a href="https://pubmed.ncbi.nlm.nih.gov/15051139/" target="_blank">Radley 2004 PubMed</a></div>
+        </div>
+      </div>
+      <div class="kahneman-pull">
+        <strong>Kahneman — </strong>"System 2 drops out first." The deliberative, long-horizon, rule-based mode is the most metabolically expensive part of cognition and the first to fail under catecholamine load. What a PM feels as "I'm used to this now, it's just the job" is often <em>System 2 offline, System 1 driving</em> — and Schommer says the sympathetic half of the stress response never stopped.
+      </div>
+      <div class="footnote">
+        <strong>Why this matters for investment.</strong> A PM three months into a sustained drawdown may truthfully report "I've adapted." Their HPA axis has habituated — they are telling the truth about their subjective experience. Their sympathetic nervous system, DLPFC–parietal connectivity, and working memory are telling a different story. Process design has to account for this: <em>the cooling-off protocol, the independent review, the pre-committed horizon — all have to be installed before the cortisol is flowing, because self-assessment stops being reliable after the first two weeks.</em>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE B: TIME HORIZON COMPRESSION ==== -->
+  <section class="slide" data-idx="2">
+    <div class="slide-header">
+      <span class="tag">Science · Time horizon compression · Prefrontal cortex</span>
+      <span class="num">02 / 05</span>
+    </div>
+    <div class="content">
+      <h1>Under stress, <em>time horizons shorten</em> — and that alone mechanically amplifies risk aversion.</h1>
+      <div class="subtitle">
+        The prefrontal cortex holds the representations that let you plan far ahead. Knock it out and intertemporal choice collapses toward the near: 15 minutes of 1-Hz TMS to left dlPFC makes subjects measurably more impulsive (Figner 2010 <i>Nat Neurosci</i>). Stress — via cortisol and catecholamines — produces the same functional offline state (Arnsten 2009; Cornelisse 2018 pharmacological replication). <strong>The financial consequence</strong> of horizon compression is not subtle: in Thaler, Tversky, Kahneman &amp; Schwartz's 1997 experiment, shortening the feedback frequency from yearly to monthly <em>nearly doubled</em> allocation to the safe asset — a 29-point swing from an identical information set.
+      </div>
+      <div class="figs-row">
+        <div class="fig-wrap">
+          <div class="fig-title">Causal: knock out left dlPFC with TMS → impulsive choice rises.</div>
+          <div class="fig-cite"><span class="figref">Figner, Knoch, Johnson, Krosch, Lisanby, Fehr &amp; Weber 2010, <i>Nat Neurosci</i> 13(5):538–539 · Figure 1</span> · N=52, 1-Hz rTMS to left vs right lateral PFC vs sham; effect in panel <strong>(a)</strong> immediately post-TMS is the headline · <a href="https://www.nature.com/articles/nn.2516" target="_blank">nature.com/articles/nn.2516</a></div>
+          <div class="fig-body">
+            <img src="figures/figner_2010_fig1.png" alt="Figner 2010 Figure 1 — proportion of patient choices by TMS condition across four panels (a-d)" />
+          </div>
+          <div class="fig-caption">Y-axis: proportion of patient (larger-later) choices. X-axis: relative difference between sooner-smaller and later-larger options. <strong>Panel (a)</strong>: immediately after rTMS to left dlPFC, the dark "Left rTMS" curve sits ~12-15 pp below Sham and Right rTMS across the 10–30% range. <strong>(b)</strong> 30 min post-TMS: effect dissipates. <strong>(c,d)</strong> "not-now" control trials: no group separation — effect is specific to self-control demands.</div>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-title">Shorter feedback horizon → nearly double the allocation to the safe asset, from identical information.</div>
+          <div class="fig-cite"><span class="figref">Thaler, Tversky, Kahneman &amp; Schwartz 1997, <i>QJE</i> 112(2):647–661 · Figure I (p. 655)</span> · N=80, experimental manipulation of evaluation-period length · <a href="https://faculty.chicagobooth.edu/-/media/faculty/richard-thaler/assets/files/the-effect-of-myopia-and-loss-aversion-on-risk-taking-an-experimental-test.pdf" target="_blank">faculty.chicagobooth.edu</a></div>
+          <div class="fig-body">
+            <img src="figures/thaler_1997_fig1.png" alt="Thaler 1997 Figure I — distributions of final bond allocations by feedback frequency condition" />
+          </div>
+          <div class="fig-caption">Histograms of final bond-fund allocation by feedback-frequency condition. <strong>Means (Table I):</strong> Monthly 59.1% in bonds · Yearly 30.4% · 5-Yearly 33.8% · Inflated-Monthly 27.6%. Subjects who see monthly P&amp;L allocate <em>almost twice as much</em> to the safe asset as subjects who see 5-yearly P&amp;L — from the same return-generating process.</div>
+        </div>
+      </div>
+      <div class="kahneman-pull">
+        <strong>The Kahneman-Thaler mechanism — </strong><em>myopic loss aversion</em>. With λ ≈ 2.25, losses are felt ~2.25× as intensely as equivalent gains. At a 1-month horizon, risky-asset returns are negative ~1 month in 3. At a 10-year horizon, cumulative losses are rare. Compress the evaluation horizon and effective risk aversion mechanically rises — <em>without any change in the analyst's true preferences or information.</em>
+      </div>
+      <div class="footnote">
+        <strong>Why this matters for investment.</strong> The 2022 rates drawdown ran 9 months. Our analyst-note corpus shows written time horizons compressing across that window — a textual signature of the same PFC-offline state the Figner TMS experiment creates causally. A PM whose effective evaluation horizon has drifted from 3 years to 3 months isn't making a worse <em>forecast</em> — they are running their existing forecast through a mechanically higher risk-aversion parameter, and the output reads as a de-risking decision. The remedy is process — pre-committed horizon declarations, delayed P&amp;L aggregation, scheduled re-allocation windows insulated from intra-cycle cortisol.
+        <div class="source">
+          Supporting mechanism: <strong>Cornelisse et al. 2018 <i>Psychoneuroendocrinology</i> 88:161–68</strong> (acute hydrocortisone → steeper discounting at 15 min, gone by 195 min); <strong>Haushofer &amp; Fehr 2014 <i>Science</i> 344:862–67 · Figure 2</strong> (four-panel synthesis of stress-induced risk &amp; time preferences); <strong>Benartzi &amp; Thaler 1995 <i>QJE</i> 110:73–92 · Fig 1 Panel D</strong> (implied equity-premium-consistent evaluation horizon ≈ 11–12 months).
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE C: OVERCONFIDENCE ==== -->
+  <section class="slide" data-idx="3">
+    <div class="slide-header">
+      <span class="tag">Science · Overconfidence · Overprecision + stress-impaired metacognition</span>
+      <span class="num">03 / 05</span>
+    </div>
+    <div class="content">
+      <h1>We are overconfident — and stress silences the brain region that would notice.</h1>
+      <div class="subtitle">
+        Overconfidence in expert forecasts is not a quirk of amateurs. The specific, training-resistant flavor is <strong>overprecision</strong>: confidence intervals too narrow for the actual variability of the world (Moore &amp; Healy 2008). Top CFOs asked to bracket next year's S&amp;P 500 with an 80% interval contain the true outcome <em>36% of the time on average — and nearly never in a crisis</em> (Ben-David, Graham &amp; Harvey 2013). <strong>Stress makes it worse via a precise mechanism</strong>: first-order accuracy and raw confidence are both unchanged, but <em>metacognitive accuracy</em> — the ability to know <em>which</em> of your own judgments is correct — collapses (Reyes 2015).
+      </div>
+      <div class="figs-row">
+        <div class="fig-wrap">
+          <div class="fig-title">What CFOs said was an 80% confidence interval on the S&amp;P 500 contained the truth only 36% of the time — and near-zero in 2008.</div>
+          <div class="fig-cite"><span class="figref">Ben-David, Graham &amp; Harvey 2013, <i>QJE</i> 128(4):1547–1584 · Figure 1 (NBER w16215 working-paper version, p. 34)</span> · 13,300+ CFO return-distribution forecasts over 37 quarterly Duke/CFO surveys, 2001–2011 · <a href="https://www.nber.org/system/files/working_papers/w16215/revisions/w16215.rev0.pdf" target="_blank">nber.org/papers/w16215</a></div>
+          <div class="fig-body">
+            <img src="figures/bdgh_2013_fig1.png" alt="Ben-David Graham Harvey 2013 Figure 1 — time-series of CFO miscalibration, hit rate by quarter 2001-2009" />
+          </div>
+          <div class="fig-caption">Per-quarter % of CFOs whose realized S&amp;P 500 return fell inside their own 80% CI. Dashed line = 80% target. Bars almost never reach the target; many quarters near 0%. <strong>CFO-stated CI width: 14.5 pp. Empirical 10th–90th percentile spread: 42.2 pp.</strong> Their intervals are roughly a third of the width the data demand.</div>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-title">Under acute stress: accuracy unchanged, confidence unchanged — but metacognitive discrimination (knowing you're wrong) collapses.</div>
+          <div class="fig-cite"><span class="figref">Reyes, Silva, Jaramillo, Rehbein &amp; Sackur 2015, <i>PLOS ONE</i> 10(7):e0132320 · Figure 3</span> · N=27, Trier Social Stress Test + perceptual discrimination task with confidence ratings · <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0132320" target="_blank">journals.plos.org/plosone</a></div>
+          <div class="fig-body">
+            <img src="figures/reyes_2015_fig3.png" alt="Reyes 2015 Figure 3 — metacognitive accuracy (type-2 ROC) by cortisol responder group" />
+          </div>
+          <div class="fig-caption"><strong>A.</strong> Anxiety rose with cortisol (manipulation check). <strong>B.</strong> Accuracy (%) and reaction time flat across stress groups. <strong>C.</strong> Type-2 ROC: p(confidence | correct) vs p(confidence | incorrect) — more bowed = better metacognition. Curves collapse toward diagonal with stress; AUC inset: Low 0.78 → Med 0.73 → High 0.68. <strong>D.</strong> Cortisol × metacognitive AUC: r²=0.34, p&lt;0.001.</div>
+        </div>
+      </div>
+      <div class="kahneman-pull">
+        <strong>Kahneman's "illusion of validity" — </strong>the subjective sense of knowing is separable from any objective track record. Experts keep the feeling even when the feedback loop is long or noisy enough to never refute them. The antidote isn't less confidence — Cremers-Petajisto and Cohen-Polk-Silli show conviction <em>from skilled managers</em> carries real signal. The antidote is <em>calibration</em>: track each analyst's Brier score, size against calibration, not against raw conviction.
+      </div>
+      <div class="footnote">
+        <strong>Why this matters — and why it ties back to stress.</strong> Overconfidence is the persistent baseline. Stress amplifies it by the exact pathway Slides 01 and 02 characterized: a depleted PFC cannot properly represent its own uncertainty, so the confidence number keeps coming out high while calibration behind it evaporates. Behavioral signature: unchanged conviction in increasingly noisy forecasts — the failure mode hardest to detect from the output alone. The BDGH result replicates out-of-sample (<strong>Boutros, Ben-David, Graham, Harvey &amp; Makridis 2020, NBER w28010</strong>); it is a structural feature of the profession, not a sample artifact.
+        <div class="source">
+          Supporting refs: <strong>Moore &amp; Healy 2008 <i>Psych Rev</i> 115:502–517</strong> (overprecision is the training-resistant subtype); <strong>Barber &amp; Odean 2000 <i>JF</i> 55:773–806 · Figure 1</strong> (highest-turnover quintile underperformed market by 650 bp annually — 65,000 households); <strong>Odean 1999 <i>AER</i> 89:1279–98</strong> (stocks sold outperformed stocks bought by 3.2 pp at 1 year, gross of costs); <strong>Kahneman &amp; Klein 2009 <i>Am Psychologist</i> 64:515–26</strong> (conditions under which expert confidence is or is not informative); <strong>Fleming et al. 2010 <i>Science</i> 329:1541–43 · Figure 3B</strong> (aPFC gray-matter volume scatters with metacognitive accuracy).
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE D: EXTENDED STRESS — BIOLOGY CONTINUES, YOU STOP NOTICING, IMPACTS ACCUMULATE ==== -->
+  <section class="slide" data-idx="4">
+    <div class="slide-header">
+      <span class="tag">Science · Extended stress · The biology keeps running, and it remodels the brain</span>
+      <span class="num">04 / 05</span>
+    </div>
+    <div class="content">
+      <h1>When stress lasts weeks, <em>biology keeps running</em> while subjective awareness fades — and the brain is quietly remodeled.</h1>
+      <div class="subtitle">
+        Four figures, two pairs. <strong>Pair 1</strong>: your biology responds to stress every day, and the damage accumulates — whether or not you feel it. Real London bond traders' daily cortisol tracked Bund implied volatility with r²=0.86 (Coates &amp; Herbert 2008 <i>PNAS</i>). Chronic caregivers show telomeres ~550 bp shorter than matched controls — the equivalent of a decade of extra biological aging (Epel et al. 2004 <i>PNAS</i>). <strong>Pair 2</strong>: the brain itself is structurally rewired. PFC pyramidal neurons lose dendrites under chronic stress (McEwen &amp; Morrison 2013 <i>Neuron</i>); stressed animals shift from flexible goal-directed choice to rigid habit — even when the reward is explicitly devalued (Dias-Ferreira et al. 2009 <i>Science</i>).
+      </div>
+      <div class="pair-stack">
+        <div class="pair-row pair-one">
+          <div class="pair-label">
+            <div class="pair-num">Pair 1</div>
+            <div class="pair-title">Biology responds &amp; accumulates — whether or not you notice</div>
+          </div>
+          <div class="fig-wrap">
+            <div class="fig-title">Real bond traders: daily cortisol tracked Bund market volatility day-to-day. r² = 0.86, p = 0.001.</div>
+            <div class="fig-cite"><span class="figref">Coates &amp; Herbert 2008, <i>PNAS</i> 105(16):6167–6172 · Figure 4</span> · 17 male traders on a London fixed-income floor, 8 trading days · <a href="https://www.pnas.org/doi/10.1073/pnas.0704025105" target="_blank">pnas.org/doi/10.1073/pnas.0704025105</a></div>
+            <div class="fig-body">
+              <img src="figures/coates_herbert_2008_fig4.jpg" alt="Coates & Herbert 2008 Figure 4 — group mean cortisol vs Bund implied volatility across 8 trading days" />
+            </div>
+            <div class="fig-caption">Group-mean cortisol (left axis) plotted against Bund implied volatility (right axis) over 8 US-calendar-driven trading days. Cortisol rose with volatility into the Employment Report and fell after — the traders kept working; their adrenal glands did not stop noticing.</div>
+          </div>
+          <div class="fig-wrap">
+            <div class="fig-title">Years of chronic stress → measurably shorter telomeres. Biological age advances ~10 years.</div>
+            <div class="fig-cite"><span class="figref">Epel, Blackburn, Lin, Dhabhar, Adler, Morrow &amp; Cawthon 2004, <i>PNAS</i> 101(49):17312–17315 · Figure 1</span> · N=58 (39 caregivers + 19 controls) · <a href="https://www.pnas.org/doi/10.1073/pnas.0407162101" target="_blank">pnas.org/doi/10.1073/pnas.0407162101</a></div>
+            <div class="fig-body">
+              <img src="figures/epel_2004_fig1.jpg" alt="Epel 2004 Figure 1 — telomere length scatter plots vs years of caregiving and vs perceived stress" />
+            </div>
+            <div class="fig-caption"><strong>A.</strong> Telomere length (t/s) falls with years of chronic caregiving (R²=0.20). <strong>B.</strong> Falls with total perceived stress (R²=0.10) — but the <em>duration</em> signal is stronger than the <em>perception</em> signal. Highest-stress quartile telomeres are ~550 bp shorter — <em>one decade of extra cellular aging</em>.</div>
+          </div>
+        </div>
+        <div class="pair-row pair-two">
+          <div class="pair-label">
+            <div class="pair-num">Pair 2</div>
+            <div class="pair-title">The brain is structurally remodeled — and behavior shifts to habit</div>
+          </div>
+          <div class="fig-wrap">
+            <div class="fig-title">Chronic stress retracts dendrites in the PFC and expands them in the OFC — partial recovery with rest.</div>
+            <div class="fig-cite"><span class="figref">McEwen &amp; Morrison 2013, <i>Neuron</i> 79(1):16–29 · Figure 2</span> · schematic of rodent-model consensus findings in mPFC / OFC pyramidal neurons under chronic restraint stress · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3753223/" target="_blank">pmc.ncbi.nlm.nih.gov/articles/PMC3753223</a></div>
+            <div class="fig-body">
+              <img src="figures/mcewen_morrison_2013_fig2.jpg" alt="McEwen & Morrison 2013 Figure 2 — dendritic shrinkage in PFC, expansion in OFC, recovery after rest" />
+            </div>
+            <div class="fig-caption">Top: baseline pyramidal neuron. Middle: chronic stress <em>retracts</em> dendrites in prelimbic / anterior cingulate PFC (left) and <em>expands</em> them in orbitofrontal cortex (right). Bottom: infralimbic PFC shows retraction that partially reverses after a rest period. The architecture that supports top-down planning is physically smaller under extended stress.</div>
+          </div>
+          <div class="fig-wrap">
+            <div class="fig-title">Chronic stress shifts choice from goal-directed to habitual. The reward changed; the stressed animals kept pressing.</div>
+            <div class="fig-cite"><span class="figref">Dias-Ferreira, Sousa, Melo, Morgado, Mesquita, Cerqueira, Costa &amp; Sousa 2009, <i>Science</i> 325(5940):621–625 · Figure 1</span> · rats, 21-day chronic unpredictable stress · <a href="https://www.science.org/doi/10.1126/science.1171203" target="_blank">science.org/doi/10.1126/science.1171203</a></div>
+            <div class="fig-body">
+              <img src="figures/dias_ferreira_2009_fig1.png" alt="Dias-Ferreira 2009 Figure 1 — stressed rats persist in lever-pressing for devalued outcome (habitual)" />
+            </div>
+            <div class="fig-caption"><strong>A.</strong> Training: both groups learn to press. <strong>B–D.</strong> Devaluation test: control animals <em>reduce pressing</em> when the outcome is devalued (goal-directed updating). <em>Stressed animals keep pressing</em> — behavior is now habitual, insensitive to the actual value of the outcome. The same rigidity a PM shows when they keep running a thesis that no longer fits.</div>
+          </div>
+        </div>
+      </div>
+      <div class="kahneman-pull">
+        <strong>Kahneman — </strong>the shift is from <em>slow, effortful, updating System 2</em> to <em>fast, automatic, habitual System 1</em>. Dias-Ferreira gives you the molecular and cellular story behind that shift: under multi-week stress the goal-directed striatal circuit (dorsomedial) atrophies and the habit circuit (dorsolateral) hypertrophies. The analyst who at Month 1 ran through counterfactuals and at Month 4 just "goes with what's worked" hasn't lost discipline — their frontostriatal wiring is literally different.
+      </div>
+      <div class="footnote">
+        <strong>Why this matters for investment.</strong> This is the slide that answers "why can't we just tough it out and stay rational during drawdowns." <em>Because toughing it out is the problem.</em> The biology responds whether or not you consciously register it (Coates), the damage accumulates longitudinally (Epel), the PFC is physically smaller under extended stress (McEwen-Morrison), and the behavior it outputs shifts to habit and away from goal-directed updating (Dias-Ferreira). Every one of these has a direct analog on a trading desk during a prolonged drawdown. The process-level remedy on Slide A — cooling-off windows, pre-committed horizons, independent review — is the only intervention robust to all four pathways.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==== SLIDE E: WHAT'S ACTUALLY HAPPENING IN THE BRAIN ==== -->
+  <section class="slide" data-idx="5">
+    <div class="slide-header">
+      <span class="tag">Science · Brain mechanism · Time-course and circuit-level takeover</span>
+      <span class="num">05 / 05</span>
+    </div>
+    <div class="content">
+      <h1>What's actually happening in your brain: a <em>neurochemical symphony</em> on a staircase of timescales — and a hostile takeover of the control circuit.</h1>
+      <div class="subtitle">
+        The stress response is not one signal — it is an overlapping sequence of neurochemicals acting on time-scales from milliseconds to months (Joëls &amp; Baram 2009 <i>Nat Rev Neurosci</i>). Monoamines (noradrenaline, dopamine) hit synapses within seconds of a stressor. CRH and other peptides follow within minutes. Corticosteroids (cortisol) bind non-genomic receptors within 15–30 minutes and genomic receptors over hours-to-days. The <em>cumulative functional effect</em>: under stress the PFC is chemically pushed offline while primitive circuits (amygdala, basal ganglia, brainstem LC) take over behavior (Arnsten 2015 <i>Nat Neurosci</i>).
+      </div>
+      <div class="figs-row">
+        <div class="fig-wrap">
+          <div class="fig-title">The stress response unfolds on multiple timescales — seconds to months, with mediators that layer onto each other.</div>
+          <div class="fig-cite"><span class="figref">Joëls &amp; Baram 2009, <i>Nat Rev Neurosci</i> 10:459–466 · Box 1 / Fig 4</span> · review of the neuroendocrinology of the stress response · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2844123/" target="_blank">pmc.ncbi.nlm.nih.gov/articles/PMC2844123</a></div>
+          <div class="fig-body">
+            <img src="figures/joels_baram_2009_box1.jpg" alt="Joels & Baram 2009 Box 1 — timescale of stress mediators from ms to months" />
+          </div>
+          <div class="fig-caption">Concentric rings from t=0 outward: <strong>monoamines</strong> (noradrenaline, dopamine) act within ms–min; <strong>CRH and other peptides</strong> within min–h; <strong>corticosteroids</strong> act non-genomically within min and genomically within hours; <strong>transcription factors and genomic/structural effects</strong> over hours–days–months. Each wave overlaps the last; extended stress keeps all of them activated.</div>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-title">Alert vs Stressed: the whole control architecture shifts from PFC top-down to amygdala + striatum + brainstem.</div>
+          <div class="fig-cite"><span class="figref">Arnsten 2015, <i>Nat Neurosci</i> 18(10):1376–1385 · Figure 1</span> · review of molecular mechanisms of stress-induced PFC dysfunction · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4816215/" target="_blank">pmc.ncbi.nlm.nih.gov/articles/PMC4816215</a></div>
+          <div class="fig-body">
+            <img src="figures/arnsten_2015_fig1.jpg" alt="Arnsten 2015 Figure 1 — Alert brain with PFC top-down control vs Stressed brain with amygdala and basal ganglia dominant" />
+          </div>
+          <div class="fig-caption"><strong>Left (Alert):</strong> PFC sends green top-down control arrows to thought, action, and emotion circuits. <strong>Right (Stressed):</strong> PFC fades; red arrows now run from sensory cortex, amygdala, basal ganglia, PAG and locus coeruleus — reflexive / habitual responding driven by more primitive circuits. Behavior becomes automatic, emotional, and threat-biased; deliberation drops out.</div>
+        </div>
+      </div>
+      <div class="kahneman-pull">
+        <strong>Kahneman — </strong>the dual-systems framework maps one-to-one onto this picture. <em>Alert brain = System 2 available</em>; <em>Stressed brain = System 2 pushed offline, System 1 in command</em>. The neuroscience doesn't override Kahneman — it gives the mechanism and the chemistry behind what he described behaviorally 40 years ago. Each of the four biases we worry about in investment decisions (anchoring, availability, loss aversion, narrow framing) lives in the System 1 circuits these two diagrams name.
+      </div>
+      <div class="footnote">
+        <strong>The takeaway across Slides 01–05.</strong> Every behavioral finding in the rest of this deck is downstream of these two diagrams. Horizon compression (Slide 02) is a direct read-out of the PFC-offline state on the right-hand brain. Overconfidence + failed metacognition (Slide 03) is a read-out of the same state — the cortical circuits that monitor one's own uncertainty sit in the faded regions. The extended-stress impacts (Slide 04) are the outer ring of the Joëls-Baram diagram playing out in a trader's brain over weeks. <em>The pathway is well-characterized. The remaining question is entirely about process design around it.</em>
+        <div class="source">
+          Companion refs: <strong>Hermans et al. 2014 <i>Trends in Neurosciences</i> 37:304–314</strong> (biphasic network reconfiguration model — salience-network surge, CEN recovery); <strong>Arnsten 2015 Figure 3</strong> (molecular detail: α1/D1 → Ca²⁺/cAMP → HCN/KCNQ potassium-channel opening → weakened synapse at dlPFC layer III spine); <strong>McEwen 2007 <i>Physiol Rev</i> 87:873–904</strong> (allostasis / allostatic load framework).
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="progress-bar"><div class="fill" id="progfill" style="width: 20%;"></div></div>
+<div class="footer-nav">
+  Slide <span id="curnum">1</span> / 5 &nbsp;·&nbsp; ← / → to navigate &nbsp;·&nbsp; <kbd>F</kbd> fullscreen
+</div>
+<div class="hint">Stress &amp; decision-making · Science slides (A · B · C · D · E) · v3 — actual published figures</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('active', k === idx));
+    document.getElementById('curnum').textContent = idx + 1;
+    document.getElementById('progfill').style.width = ((idx + 1) / slides.length * 100) + '%';
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { show(idx + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(idx - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    } else if (/^[1-5]$/.test(e.key)) {
+      show(parseInt(e.key, 10) - 1);
+    }
+  });
+  show(0);
+</script>
+</body>
+</html>
